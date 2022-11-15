@@ -311,13 +311,17 @@ async def level(ctx: commands.Context):
 
 @bot.command(name="test")
 async def test(ctx: commands.Context):
-    bot.scheduler.add_job(remind,"date",next_run_time=dt.datetime.now()+dt.timedelta(seconds=10),kwargs={"user":ctx.author.id, "channel_id":ctx.channel.id})
+    bot.scheduler.add_job(
+        remind,
+        "date",
+        next_run_time=dt.datetime.now()+dt.timedelta(seconds=10),
+        kwargs={"user": ctx.author.id, "channel_id": ctx.channel.id})
 
 async def remind(user: int, channel_id: int, **kwargs):
     channel = bot.get_channel(channel_id)
     u: discord.User = await bot.fetch_user(user)
     em_msg = discord.Embed(title="tasks ready")
-    await channel.send(content=f"{u.mention}",embed=em_msg)
+    await channel.send(content=f"{u.mention}", embed=em_msg)
 
 @bot.command(name="start", aliases=["addreminder"])
 async def start(ctx: commands.Context, task: str) -> None:
