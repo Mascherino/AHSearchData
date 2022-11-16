@@ -21,7 +21,7 @@ class Scheduler(AsyncIOScheduler):
         super().__init__(jobstores=self.js)
 
     def get_user_jobs(self, user: int, string: bool = False
-                      ) -> Sequence[Optional[Job]]:
+                      ) -> Optional[Sequence[Job]]:
         jobs = self.get_jobs()
         user_jobs = []
         for job in jobs:
