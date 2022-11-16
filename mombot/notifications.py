@@ -26,7 +26,7 @@ class Notifications(commands.Cog):
         self.index = 0
         self.bot: commands.Bot = bot
         self.bot.logger.info("Starting Notifications cog")
-        
+
         self.explorer_begin.start()
         self.explorer_end.start()
         self.happyhour_start.start()
