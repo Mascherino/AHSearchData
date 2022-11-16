@@ -8,6 +8,8 @@ import re
 import string
 import random
 
+from enum import IntEnum
+
 # Annotation imports
 from typing import (
     Optional,
@@ -82,3 +84,9 @@ def prepare_recipes(input: str, output: str) -> None:
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits +
                  string.ascii_lowercase) -> str:
     return ''.join(random.choice(chars) for _ in range(size))
+
+class Color(IntEnum):
+    RED = 0xff0000
+    GREEN = 0x00ff00
+    BLUE = 0x0000ff
+    DARK_GRAY = 0x424949
