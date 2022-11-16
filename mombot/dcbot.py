@@ -387,15 +387,15 @@ async def reminders(ctx: commands.Context) -> None:
                            color=0x424949)
 
     task_names = "\n".join([job.kwargs["task_name"] for job in jobs]
-                           if jobs else [""])
+                           if jobs else ["-"])
     em_msg.add_field(name=f"Task", value=task_names)
 
     remind_time = "\n".join([
         str(job.next_run_time.replace(microsecond=0)) for job in jobs]
-        if jobs else [""])
+        if jobs else ["-"])
     em_msg.add_field(name="Due time", value=remind_time)
 
-    ids = "\n".join([job.id for job in jobs] if jobs else [""])
+    ids = "\n".join([job.id for job in jobs] if jobs else ["-"])
     em_msg.add_field(name="ID", value=ids)
 
     await ctx.send(embed=em_msg)
