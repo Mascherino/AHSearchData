@@ -89,7 +89,7 @@ class API():
         except KeyError:
             return None
 
-    def get_buildings(self) -> Union[Any, None]:
+    def get_buildings(self) -> Optional[Dict[str, Any]]:
         '''
         Get onmars land.plots buildings
 
