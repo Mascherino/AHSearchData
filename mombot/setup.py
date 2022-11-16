@@ -8,7 +8,8 @@ setuptools.setup(
     version="1.0.0",
     author="Keedosuul",
     author_email="code@keedosuul.de",
-    description="A python based discord bot for providing useful commands for Million on Mars",
+    description="A python based discord bot for providing " +
+                "useful commands for Million on Mars",
     long_description=long_description,
     long_description_content_type="text/markdown",
     python_requires='>=3.7',
