@@ -99,6 +99,7 @@ def read_json(file: str) -> Optional[Dict[str, Any]]:
             bot.logger.info(f"Successfully read empty file {file}.")
             return {}
         return data
+    return None
 
 def save_json(file: str, data: Dict[str, Any]) -> None:
     ''' Save data variable as JSON config file '''
@@ -132,7 +133,7 @@ async def ah(ctx: commands.Context, name: str, rarity: str = "") -> None:
     got_listings = False
     amount = 1
     error = f"{name} did not match the required scheme."
-    listings = None
+    listings: Optional[Dict[Union[str, int], Any]] = None
     try:
         message = await ctx.send(ctx.author.mention + "\nGetting listings...")
         regex = re.compile("".join([building_regex, r"=[0-9]{0,1}"]))
@@ -156,7 +157,7 @@ async def ah(ctx: commands.Context, name: str, rarity: str = "") -> None:
             await edit_msg_to_error(message, error)
             return
         if not got_listings:
-            listings: Optional[Dict[Union[str, int], Any]] = \
+            listings = \
                 bot.api.get_listings(name, 1, 1)
         if listings:
             description = f"Listings containing {amount} {name} (page 1)"
@@ -219,12 +220,13 @@ async def buildings(ctx: commands.Context):
     '''
     try:
         msg = await ctx.send(ctx.author.mention + """\nGetting buildings..""")
-        buildings = bot.api.get_buildings()
+        buildings: Optional[Dict[str, Any]] = bot.api.get_buildings()
         if buildings:
-            buildings = bot.api.extract_data(buildings, "name")
+            bldg_list: Optional[Sequence[Any]] = bot.api.extract_data(
+                buildings, "name")
             factories = []
             artifacts = []
-            for item in buildings:
+            for item in bldg_list:
                 if item not in ["total_space", "available_space"]:
                     name = item.rsplit("_", 1)
                     if len(name) > 1:
