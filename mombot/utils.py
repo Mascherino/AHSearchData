@@ -4,7 +4,6 @@ import logging.handlers
 import os
 import sys
 import json
-from queue import SimpleQueue as Queue
 import re
 import string
 import random
@@ -16,28 +15,12 @@ from typing import (
     Dict,
     Any,
 )
-
-# # Coroutine friendly QueueHandler courtesy of Martjin Pieters:
-# # https://www.zopatista.com/python/2019/05/11/asyncio-logging/
-# class LocalQueueHandler(logging.handlers.QueueHandler):
-#     def emit(self, record: logging.LogRecord) -> None:
-#         # Removed the call to self.prepare(), handle task cancellation
-#         try:
-#             self.enqueue(record)
-#         except asyncio.CancelledError:
-#             raise
-#         except Exception:
-#             self.handleError(record)
-
-# Timed Rotating File Handler, based on Klipper's implementation
 class LoggingHandler(logging.handlers.TimedRotatingFileHandler):
     def __init__(self, app_args: Dict[str, Any], **kwargs) -> None:
         super().__init__(app_args['log_file'], **kwargs)
         self.rollover_info: Dict[str, str] = {
             'header': f"{'-'*20}Log Start{'-'*20}"
         }
-        # self.rollover_info['application_args'] = "\n".join(
-        #     [f"{k}: {v}" for k, v in app_args.items()])
         lines = [line for line in self.rollover_info.values() if line]
         if self.stream is not None:
             self.stream.write("\n".join(lines) + "\n")
@@ -61,8 +44,6 @@ def setup_logging(app_args: Dict[str, Any]
     format = logging.Formatter(
         '[%(filename)s:%(funcName)s()] - %(message)s')
     stdout_handler.setFormatter(format)
-    # for name, val in app_args.items():
-    #     logging.info(f"{name}: {val}")
     warning: Optional[str] = None
     file_handler: Optional[LoggingHandler] = None
     log_file: str = app_args.get('log_file', "")
