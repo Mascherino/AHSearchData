@@ -38,7 +38,6 @@ building_regex = r"(([a-zA-Z0-9_]+-gen[2,3]_)|(([a-zA-Z0-9]+-){0,1}" \
 
 config = configparser.ConfigParser()
 config.read("config.cfg")
-
 class Bot(commands.Bot):
 
     def __init__(self):
@@ -49,12 +48,15 @@ class Bot(commands.Bot):
                          intents=intents)
 
     async def on_ready(self):
+
         self.logger = logging.getLogger(__name__)
         stdout_hdlr, file_hdlr, warn = setup_logging(
             {"log_file": "bot.log", "log_level": logging.INFO})
         self.logger.addHandler(stdout_hdlr)
         if file_hdlr:
             self.logger.addHandler(file_hdlr)
+
+        self.config = config
 
         if self.user:
             self.logger.info(f'Logged in as {self.user} (ID: {self.user.id})')
@@ -63,8 +65,9 @@ class Bot(commands.Bot):
                                    name="Million on Mars"))
         await self.add_cog(Notifications(bot))
 
-        self.scheduler: Scheduler = Scheduler(config['mariadb']['credentials'])
-        self.api: API = API(config["yourls"]["secret"])
+        self.scheduler: Scheduler = Scheduler(
+            self.config['mariadb']['credentials'])
+        self.api: API = API(self)
 
         aps_logger = logging.getLogger("apscheduler")
         stdout_hdlr_aps, _ = setup_logging_custom(
@@ -74,7 +77,7 @@ class Bot(commands.Bot):
         self.scheduler.start()
 
         self.recipes = read_json(os.path.join(
-            config["misc"]["json_folder"],
+            self.config["misc"]["json_folder"],
             "recipes.json"))
 
 
