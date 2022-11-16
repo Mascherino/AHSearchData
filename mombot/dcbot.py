@@ -13,7 +13,6 @@ from typing import (
     Any,
     Optional,
     Dict,
-    Set,
     Sequence,
     Union
 )
@@ -54,9 +53,11 @@ class Bot(commands.Bot):
         stdout_hdlr, file_hdlr, warn = setup_logging(
             {"log_file": "bot.log", "log_level": logging.INFO})
         self.logger.addHandler(stdout_hdlr)
-        self.logger.addHandler(file_hdlr)
+        if file_hdlr:
+            self.logger.addHandler(file_hdlr)
 
-        self.logger.info(f'Logged in as {self.user} (ID: {self.user.id})')
+        if self.user:
+            self.logger.info(f'Logged in as {self.user} (ID: {self.user.id})')
 
         await self.change_presence(activity=discord.Game(
                                    name="Million on Mars"))
@@ -72,7 +73,9 @@ class Bot(commands.Bot):
 
         self.scheduler.start()
 
-        self.recipes = read_json("test/recipes.json")
+        self.recipes = read_json(os.path.join(
+            config["misc"]["json_folder"],
+            "recipes.json"))
 
 
 ''' Variables '''
@@ -81,7 +84,7 @@ data: Dict[str, str] = {}
 
 ''' Functions '''
 
-def read_json(file: str) -> Dict[str, Any]:
+def read_json(file: str) -> Optional[Dict[str, Any]]:
     ''' Read JSON config file and return it '''
     if os.path.isfile(file):
         if os.path.getsize(file) > 0:
@@ -116,7 +119,7 @@ async def edit_msg_to_error(msg: discord.Message, error: Any) -> None:
 bot = Bot()
 
 @bot.command(name="ah", aliases=["search"])
-async def ah(ctx: commands.Context, name: str, rarity: str = None) -> None:
+async def ah(ctx: commands.Context, name: str, rarity: str = "") -> None:
     '''
     Search AtomicHub marketplace
 
@@ -129,6 +132,7 @@ async def ah(ctx: commands.Context, name: str, rarity: str = None) -> None:
     got_listings = False
     amount = 1
     error = f"{name} did not match the required scheme."
+    listings = None
     try:
         message = await ctx.send(ctx.author.mention + "\nGetting listings...")
         regex = re.compile("".join([building_regex, r"=[0-9]{0,1}"]))
@@ -201,7 +205,7 @@ async def ah(ctx: commands.Context, name: str, rarity: str = None) -> None:
 @ah.error
 async def ah_error(ctx: commands.Context, err: commands.CommandError) -> None:
     if isinstance(err, commands.MissingRequiredArgument):
-        await print_general_usage(ctx, err)
+        await print_general_usage(ctx)
     elif isinstance(err, commands.CheckFailure):
         await ctx.send('You dont have the permission to use that command')
 
@@ -216,28 +220,29 @@ async def buildings(ctx: commands.Context):
     try:
         msg = await ctx.send(ctx.author.mention + """\nGetting buildings..""")
         buildings = bot.api.get_buildings()
-        buildings = bot.api.extract_data(buildings, "name")
-        factories = []
-        artifacts = []
-        for item in buildings:
-            if item not in ["total_space", "available_space"]:
-                name = item.rsplit("_", 1)
-                if len(name) > 1:
-                    if name[1] == "A":
-                        if not name[0] in artifacts:
-                            artifacts.append(name[0])
-                    else:
-                        if not name[0] in factories:
-                            factories.append(name[0])
-        description = "List of all buildings"
-        em_msg = discord.Embed(title="Buildings", description=description,
-                               color=0x00ff00)
-        em_msg.add_field(name="Factories", value="\n".join(factories),
-                         inline=True)
-        em_msg.add_field(name="Artifacts", value="\n".join(artifacts),
-                         inline=True)
-        await msg.delete()
-        msg = await ctx.send(ctx.author.mention, embed=em_msg)
+        if buildings:
+            buildings = bot.api.extract_data(buildings, "name")
+            factories = []
+            artifacts = []
+            for item in buildings:
+                if item not in ["total_space", "available_space"]:
+                    name = item.rsplit("_", 1)
+                    if len(name) > 1:
+                        if name[1] == "A":
+                            if not name[0] in artifacts:
+                                artifacts.append(name[0])
+                        else:
+                            if not name[0] in factories:
+                                factories.append(name[0])
+            description = "List of all buildings"
+            em_msg = discord.Embed(title="Buildings", description=description,
+                                   color=0x00ff00)
+            em_msg.add_field(name="Factories", value="\n".join(factories),
+                             inline=True)
+            em_msg.add_field(name="Artifacts", value="\n".join(artifacts),
+                             inline=True)
+            await msg.delete()
+            msg = await ctx.send(ctx.author.mention, embed=em_msg)
     except Exception as e:
         print(e)
         await ctx.send(f"Error listing all buildings.\n{e}")
@@ -321,42 +326,44 @@ async def remind(user: int, channel_id: int, **kwargs):
     channel = bot.get_channel(channel_id)
     u: discord.User = await bot.fetch_user(user)
     em_msg = discord.Embed(title="tasks ready")
-    await channel.send(content=f"{u.mention}", embed=em_msg)
+    if isinstance(channel, discord.TextChannel):
+        await channel.send(content=f"{u.mention}", embed=em_msg)
 
 @bot.command(name="start", aliases=["addreminder"])
 async def start(ctx: commands.Context, task: str) -> None:
-    try:
-        task_dir = bot.recipes[task]
-        print(task_dir)
-    except KeyError as e:
-        bot.logger.error(f"{task} key not found in recipes.")
-        await ctx.send(f"{task} not found in recipes.")
-        return
-    job_id = id_generator(8)
-    for _ in range(0, 100):
+    if bot.recipes:
         try:
-            bot.scheduler.add_job(
-                remind,
-                id=job_id,
-                trigger="date",
-                next_run_time=dt.datetime.now()+dt.timedelta(
-                    seconds=task_dir["durationSeconds"]),
-                kwargs={
-                    "user": ctx.author.id,
-                    "channel_id": ctx.channel.id,
-                    "task_name": task_dir["name"]})
-        except ConflictingIdError as e:
-            bot.logger.error("Conflicting id in job")
-        break
-    task_time = task_dir["durationSeconds"]
-    m, s = divmod(task_time, 60)
-    h, m = divmod(m, 60)
-    task_time = '{:0>2}:{:0>2}:{:0>2}'.format(h, m, s)
-    message = f"I'll remind you in {task_time} to " + \
-              f"finish your {task_dir['name']} task(s)"
-    em_msg = discord.Embed(color=0x424949)
-    em_msg.add_field(name="Recipes", value=message)
-    await ctx.send(embed=em_msg, ephemeral=True)
+            task_dir = bot.recipes[task]
+            print(task_dir)
+        except KeyError as e:
+            bot.logger.error(f"{task} key not found in recipes.")
+            await ctx.send(f"{task} not found in recipes.")
+            return
+        job_id = id_generator(8)
+        for _ in range(0, 100):
+            try:
+                bot.scheduler.add_job(
+                    remind,
+                    id=job_id,
+                    trigger="date",
+                    next_run_time=dt.datetime.now()+dt.timedelta(
+                        seconds=task_dir["durationSeconds"]),
+                    kwargs={
+                        "user": ctx.author.id,
+                        "channel_id": ctx.channel.id,
+                        "task_name": task_dir["name"]})
+            except ConflictingIdError as e:
+                bot.logger.error("Conflicting id in job")
+            break
+        task_time = task_dir["durationSeconds"]
+        m, s = divmod(task_time, 60)
+        h, m = divmod(m, 60)
+        task_time = '{:0>2}:{:0>2}:{:0>2}'.format(h, m, s)
+        message = f"I'll remind you in {task_time} to " + \
+                  f"finish your {task_dir['name']} task(s)"
+        em_msg = discord.Embed(color=0x424949)
+        em_msg.add_field(name="Recipes", value=message)
+        await ctx.send(embed=em_msg, ephemeral=True)
 
 @bot.command(name="delreminder", aliases=["stop"])
 async def delreminder(ctx: commands.Context, job_id: str) -> None:
@@ -369,19 +376,20 @@ async def delreminder(ctx: commands.Context, job_id: str) -> None:
 
 @bot.command(name="reminders", aliases=["reminder"])
 async def reminders(ctx: commands.Context) -> None:
-    jobs: Sequence[Job] = bot.scheduler.get_user_jobs(ctx.author.id)
-    message = f"{jobs}"
+    jobs: Optional[Sequence[Job]] = bot.scheduler.get_user_jobs(ctx.author.id)
     em_msg = discord.Embed(title=f"Reminders for {ctx.author.display_name}",
                            color=0x424949)
 
-    task_names = "\n".join([job.kwargs["task_name"] for job in jobs])
+    task_names = "\n".join([job.kwargs["task_name"] for job in jobs]
+                           if jobs else [""])
     em_msg.add_field(name=f"Task", value=task_names)
 
     remind_time = "\n".join([
-        str(job.next_run_time.replace(microsecond=0)) for job in jobs])
+        str(job.next_run_time.replace(microsecond=0)) for job in jobs]
+        if jobs else [""])
     em_msg.add_field(name="Due time", value=remind_time)
 
-    ids = "\n".join([job.id for job in jobs])
+    ids = "\n".join([job.id for job in jobs] if jobs else [""])
     em_msg.add_field(name="ID", value=ids)
 
     await ctx.send(embed=em_msg)
