@@ -226,16 +226,17 @@ async def buildings(ctx: commands.Context):
                 buildings, "name")
             factories = []
             artifacts = []
-            for item in bldg_list:
-                if item not in ["total_space", "available_space"]:
-                    name = item.rsplit("_", 1)
-                    if len(name) > 1:
-                        if name[1] == "A":
-                            if not name[0] in artifacts:
-                                artifacts.append(name[0])
-                        else:
-                            if not name[0] in factories:
-                                factories.append(name[0])
+            if bldg_list:
+                for item in bldg_list:
+                    if item not in ["total_space", "available_space"]:
+                        name = item.rsplit("_", 1)
+                        if len(name) > 1:
+                            if name[1] == "A":
+                                if not name[0] in artifacts:
+                                    artifacts.append(name[0])
+                            else:
+                                if not name[0] in factories:
+                                    factories.append(name[0])
             description = "List of all buildings"
             em_msg = discord.Embed(title="Buildings", description=description,
                                    color=0x00ff00)
