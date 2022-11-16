@@ -1,6 +1,4 @@
-from distutils.command.build import build
 import discord
-from discord.ext import commands
 
 from api import API
 import configparser
