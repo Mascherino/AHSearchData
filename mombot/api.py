@@ -27,9 +27,11 @@ class RequestException(Exception):
 
 class API():
 
-    def __init__(self, yourls_secret: str) -> None:
-        url = "https://link.keedosuul.de"
-        self.yourls: pyourls3.Yourls = pyourls3.Yourls(url, key=yourls_secret)
+    def __init__(self, bot) -> None:
+        self.config = bot.config
+        self.yourls: pyourls3.Yourls = pyourls3.Yourls(
+            addr=self.config["yourls"]["url"],
+            key=self.config["yourls"]["secret"])
 
     def get_listings(self, building: str, page_nr: int, amount: int = 1
                      ) -> Optional[Dict[Union[str, int], Any]]:
