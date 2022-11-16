@@ -403,7 +403,7 @@ async def reminders(ctx: commands.Context) -> None:
 @bot.command(name="tasks")
 async def tasks(ctx: commands.Context) -> None:
     msg = f"A complete list of all recipes is available at " + \
-          f"http://mom.keedosuul.de/recipes"
+          config["misc"]["recipes_url"]
     em_msg = discord.Embed(color=0x424949)
     em_msg.add_field(name="Recipes", value=msg)
     await ctx.send(embed=em_msg)
