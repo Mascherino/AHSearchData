@@ -26,7 +26,7 @@ from views import Listings
 from api import API
 from notifications import Notifications
 from scheduler import Scheduler
-from utils import setup_logging, setup_logging_custom, id_generator
+from utils import setup_logging, setup_logging_custom, id_generator, Color
 
 if TYPE_CHECKING:
     from apscheduler.job import Job
@@ -167,7 +167,7 @@ async def ah(ctx: commands.Context, name: str, rarity: str = "") -> None:
             em_msg = discord.Embed(
                 title="Listings",
                 description=description,
-                color=0x00ff00)
+                color=Color.GREEN)
 
             em_msg.add_field(
                 name="Listings",
@@ -242,7 +242,7 @@ async def buildings(ctx: commands.Context):
                                     factories.append(name[0])
             description = "List of all buildings"
             em_msg = discord.Embed(title="Buildings", description=description,
-                                   color=0x00ff00)
+                                   color=Color.GREEN)
             em_msg.add_field(name="Factories", value="\n".join(factories),
                              inline=True)
             em_msg.add_field(name="Artifacts", value="\n".join(artifacts),
@@ -302,7 +302,7 @@ async def level(ctx: commands.Context):
         em_msg = discord.Embed(title="Buildings",
                                description="List of all buildings\n" +
                                "Possible rarities: C, U, R, E, L, M",
-                               color=0x00ff00)
+                               color=Color.GREEN)
         em_msg.add_field(name="Buildings",
                          value="\n".join(buildings.keys()), inline=True)
         em_msg.add_field(name="Rarities",
@@ -367,7 +367,7 @@ async def start(ctx: commands.Context, task: str) -> None:
         task_time = '{:0>2}:{:0>2}:{:0>2}'.format(h, m, s)
         message = f"I'll remind you in {task_time} to " + \
                   f"finish your {task_dir['name']} task(s)"
-        em_msg = discord.Embed(color=0x424949)
+        em_msg = discord.Embed(color=Color.DARK_GRAY)
         em_msg.add_field(name="Recipes", value=message)
         await ctx.send(embed=em_msg, ephemeral=True)
 
@@ -384,7 +384,7 @@ async def delreminder(ctx: commands.Context, job_id: str) -> None:
 async def reminders(ctx: commands.Context) -> None:
     jobs: Optional[Sequence[Job]] = bot.scheduler.get_user_jobs(ctx.author.id)
     em_msg = discord.Embed(title=f"Reminders for {ctx.author.display_name}",
-                           color=0x424949)
+                           color=Color.DARK_GRAY)
 
     task_names = "\n".join([job.kwargs["task_name"] for job in jobs]
                            if jobs else ["-"])
@@ -404,7 +404,7 @@ async def reminders(ctx: commands.Context) -> None:
 async def tasks(ctx: commands.Context) -> None:
     msg = f"A complete list of all recipes is available at " + \
           config["misc"]["recipes_url"]
-    em_msg = discord.Embed(color=0x424949)
+    em_msg = discord.Embed(color=Color.DARK_GRAY)
     em_msg.add_field(name="Recipes", value=msg)
     await ctx.send(embed=em_msg)
 
