@@ -122,7 +122,7 @@ async def edit_msg_to_error(msg: discord.Message, error: Any) -> None:
 
 bot = Bot()
 
-@bot.command(name="ah", aliases=["search"])
+@bot.command(name="ah", aliases=["search", "atomichub"])
 async def ah(ctx: commands.Context, name: str, rarity: str = "") -> None:
     '''
     Search AtomicHub marketplace
@@ -258,7 +258,7 @@ async def buildings_error(ctx: commands.Context, err: commands.CommandError):
     if isinstance(err, commands.CheckFailure):
         await ctx.send('You dont have the permission to use that command')
 
-@bot.command(name="level", aliases=["levels", "lvl"])
+@bot.command(name="level", aliases=["levels", "lvl", "maxlevel"])
 async def level(ctx: commands.Context):
     '''
     List all building level
@@ -400,7 +400,7 @@ async def reminders(ctx: commands.Context) -> None:
 
     await ctx.send(embed=em_msg)
 
-@bot.command(name="tasks")
+@bot.command(name="tasks", aliases=["recipes"])
 async def tasks(ctx: commands.Context) -> None:
     msg = f"A complete list of all recipes is available at " + \
           config["misc"]["recipes_url"]
