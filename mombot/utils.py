@@ -81,8 +81,7 @@ def prepare_recipes(input: str, output: str) -> None:
             if recipe.rsplit("_", 1)[0] not in processed_recipes:
                 processed_recipes.append(recipe.rsplit("_", 1)[0])
 
-def id_generator(size=6, chars=string.ascii_uppercase + string.digits +
-                 string.ascii_lowercase) -> str:
+def id_generator(size=6, chars=string.ascii_letters + string.digits) -> str:
     return ''.join(random.choice(chars) for _ in range(size))
 
 class Color(IntEnum):
