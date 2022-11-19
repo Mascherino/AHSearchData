@@ -28,8 +28,7 @@ from notifications import Notifications
 from scheduler import Scheduler
 from utils import setup_logging, setup_logging_custom, id_generator, Color
 
-if TYPE_CHECKING:
-    from apscheduler.job import Job
+from apscheduler.job import Job
 
 from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
 
@@ -340,7 +339,6 @@ async def start(ctx: commands.Context, task: str) -> None:
     if bot.recipes:
         try:
             task_dir = bot.recipes[task]
-            print(task_dir)
         except KeyError as e:
             bot.logger.error(f"{task} key not found in recipes.")
             await ctx.send(f"{task} not found in recipes.")
@@ -373,10 +371,14 @@ async def start(ctx: commands.Context, task: str) -> None:
 
 @bot.command(name="delreminder", aliases=["stop"])
 async def delreminder(ctx: commands.Context, job_id: str) -> None:
-    try:
-        bot.scheduler.remove_job(job_id)
-        await ctx.send(f"Successfully removed job with id {job_id}")
-    except JobLookupError as e:
+    job: Optional[Job] = bot.scheduler.get_job(job_id)
+    if isinstance(job, Job):
+        if job.kwargs["user"] == ctx.author.id:
+            bot.scheduler.remove_job(job_id)
+            await ctx.send(f"Successfully removed job with id {job_id}")
+        else:
+            await ctx.send(f"You cannot remove a reminder from another user")
+    else:
         bot.logger.error(f"Could not find job with id {job_id}")
         await ctx.send(f"Could not find reminder with id {job_id}")
 
