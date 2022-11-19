@@ -46,8 +46,6 @@ class Bot(commands.Bot):
         super().__init__(command_prefix=commands.when_mentioned_or('!'),
                          intents=intents)
 
-    async def on_ready(self):
-
         self.logger = logging.getLogger(__name__)
         stdout_hdlr, file_hdlr, warn = setup_logging(
             {"log_file": "bot.log", "log_level": logging.INFO})
@@ -55,7 +53,24 @@ class Bot(commands.Bot):
         if file_hdlr:
             self.logger.addHandler(file_hdlr)
 
+        aps_logger = logging.getLogger("apscheduler")
+        stdout_hdlr_aps, _ = setup_logging_custom(
+            {"name": "apscheduler", "log_level": logging.INFO})
+        aps_logger.addHandler(stdout_hdlr_aps)
+
         self.config = config
+
+        self.recipes = read_json(os.path.join(
+            self.config["misc"]["json_folder"],
+            "recipes.json"))
+
+        self.scheduler: Scheduler = Scheduler(
+            self.config['mariadb']['credentials'])
+        self.scheduler.start()
+
+        self.api: API = API(self)
+
+    async def on_ready(self):
 
         if self.user:
             self.logger.info(f'Logged in as {self.user} (ID: {self.user.id})')
@@ -63,21 +78,6 @@ class Bot(commands.Bot):
         await self.change_presence(activity=discord.Game(
                                    name="Million on Mars"))
         await self.add_cog(Notifications(bot))
-
-        self.scheduler: Scheduler = Scheduler(
-            self.config['mariadb']['credentials'])
-        self.api: API = API(self)
-
-        aps_logger = logging.getLogger("apscheduler")
-        stdout_hdlr_aps, _ = setup_logging_custom(
-            {"name": "apscheduler", "log_level": logging.INFO})
-        aps_logger.addHandler(stdout_hdlr_aps)
-
-        self.scheduler.start()
-
-        self.recipes = read_json(os.path.join(
-            self.config["misc"]["json_folder"],
-            "recipes.json"))
 
 
 ''' Variables '''
