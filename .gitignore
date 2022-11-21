@@ -1,7 +1,6 @@
-__pycache__/*
+__pycache__/
 *.log
 config.cfg
 *.log.*
 data/*
-mombot/__pycache__/*
-.vscode/*
+.vscode/
