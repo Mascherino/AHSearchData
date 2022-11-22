@@ -1,6 +1,6 @@
 import discord
 
-from api import API
+from components.api import API
 import configparser
 
 class Confirm(discord.ui.View):

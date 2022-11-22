@@ -23,10 +23,10 @@ import discord
 from discord.ext import commands
 
 # Custom modules
-from views import Listings
-from api import API
-from notifications import Notifications
-from scheduler import Scheduler
+from components.views import Listings
+from components.api import API
+from components.notifications import Notifications
+from components.scheduler import Scheduler
 from utils import setup_logging, setup_logging_custom, id_generator, Color
 
 from apscheduler.job import Job
