@@ -1,6 +1,7 @@
 import json
 from json.decoder import JSONDecodeError
 import os
+from os.path import dirname as up
 import re
 
 import datetime as dt
@@ -36,7 +37,10 @@ building_regex = r"(([a-zA-Z0-9_]+-gen[2,3]_)|(([a-zA-Z0-9]+-){0,1}" \
     r"([a-zA-Z0-9]+_){1,3})|([a-zA-Z0-9_]+-22_))[C,U,R,E,L,M,S](10|[1-9])"
 
 config = configparser.ConfigParser()
-config.read("config.cfg")
+root_path = up(up(__file__))
+config_path = os.path.join(root_path, "config.cfg")
+config.read(config_path)
+
 class Bot(commands.Bot):
 
     def __init__(self):
@@ -48,7 +52,8 @@ class Bot(commands.Bot):
 
         self.logger = logging.getLogger(__name__)
         stdout_hdlr, file_hdlr, warn = setup_logging(
-            {"log_file": "bot.log", "log_level": logging.INFO})
+            {"log_file": os.path.join(root_path, "opportunity.log"),
+             "log_level": logging.INFO})
         self.logger.addHandler(stdout_hdlr)
         if file_hdlr:
             self.logger.addHandler(file_hdlr)
@@ -63,7 +68,7 @@ class Bot(commands.Bot):
         self.recipes = read_json(os.path.join(
             self.config["misc"]["json_folder"],
             "recipes.json"))
-
+            
         self.scheduler: Scheduler = Scheduler(
             self.config['mariadb']['credentials'])
         self.scheduler.start()
