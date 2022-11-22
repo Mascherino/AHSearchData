@@ -52,7 +52,7 @@ class Bot(commands.Bot):
 
         self.logger = logging.getLogger(__name__)
         stdout_hdlr, file_hdlr, warn = setup_logging(
-            {"log_file": os.path.join(root_path, "opportunity.log"),
+            {"log_file": os.path.join(root_path, "logs", "opportunity.log"),
              "log_level": logging.INFO})
         self.logger.addHandler(stdout_hdlr)
         if file_hdlr:
