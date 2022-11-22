@@ -27,11 +27,14 @@ class RequestException(Exception):
 
 class API():
 
-    def __init__(self, bot) -> None:
-        self.config = bot.config
+    def __init__(self, bot=None, url: str = "", secret: str = "") -> None:
+        if bot:
+            self.config = bot.config
+            url = self.config["yourls"]["url"]
+            secret = self.config["yourls"]["secret"]
         self.yourls: pyourls3.Yourls = pyourls3.Yourls(
-            addr=self.config["yourls"]["url"],
-            key=self.config["yourls"]["secret"])
+            addr=url,
+            key=secret)
 
     def get_listings(self, building: str, page_nr: int, amount: int = 1
                      ) -> Optional[Dict[Union[str, int], Any]]:
