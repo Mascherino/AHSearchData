@@ -33,7 +33,8 @@ class Listings(discord.ui.View):
                    button: discord.ui.Button) -> None:
         config = configparser.ConfigParser()
         config.read("config.cfg")
-        api = API(config["yourls"]["secret"])
+        api = API(url=config["yourls"]["url"],
+                  secret=config["yourls"]["secret"])
         await interaction.response.defer(thinking=True)
         self.page += 1
         listings = api.get_listings(self.building, self.page)
