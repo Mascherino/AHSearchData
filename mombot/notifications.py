@@ -10,7 +10,7 @@ from typing import (
 )
 
 if TYPE_CHECKING:
-    import dcbot
+    import opportunity
 
 explorer_channel_id = 1038886699587076216
 explorer_role_id = 1038880989662957660
@@ -36,7 +36,7 @@ class Notifications(commands.Cog):
 
     def __init__(self, bot):
         self.index = 0
-        self.bot: dcbot.Bot = bot
+        self.bot: opportunity.Bot = bot
         self.bot.logger.info("Starting Notifications cog")
 
         self.explorer_begin.start()
