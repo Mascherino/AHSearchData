@@ -68,7 +68,7 @@ class Bot(commands.Bot):
         self.recipes = read_json(os.path.join(
             self.config["misc"]["json_folder"],
             "recipes.json"))
-            
+
         self.scheduler: Scheduler = Scheduler(
             self.config['mariadb']['credentials'])
         self.scheduler.start()
