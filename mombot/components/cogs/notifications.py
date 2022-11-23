@@ -114,3 +114,6 @@ class Notifications(commands.Cog):
             await happyhour_channel.send(f"{happyhour_role.mention}\n" +
                                          "Happy Hour ends in 10 minutes.",
                                          delete_after=(60*15))
+
+async def setup(bot: commands.Bot) -> None:
+    await bot.add_cog(Notifications(bot))
