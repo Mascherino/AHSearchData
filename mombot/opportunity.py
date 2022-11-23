@@ -25,7 +25,6 @@ from discord.ext import commands
 # Custom modules
 from components.views import Listings
 from components.api import API
-from components.notifications import Notifications
 from components.scheduler import Scheduler
 from utils import setup_logging, setup_logging_custom, id_generator, Color
 
@@ -82,7 +81,10 @@ class Bot(commands.Bot):
 
         await self.change_presence(activity=discord.Game(
                                    name="Million on Mars"))
-        await self.add_cog(Notifications(bot))
+
+        await load_cogs(self)
+        await load_commands(self)
+        await self.tree.sync()
 
 
 ''' Variables '''
@@ -90,6 +92,26 @@ class Bot(commands.Bot):
 data: Dict[str, str] = {}
 
 ''' Functions '''
+
+async def load_cogs(bot: Bot) -> None:
+    components_path = os.path.join(root_path, "mombot", "components", "cogs")
+    for component in os.listdir(components_path):
+        if os.path.isfile(os.path.join(components_path, component)):
+            try:
+                await bot.load_extension("components.cogs." + component[:-3])
+                bot.logger.info(f"Successfully loaded '{component[:-3]}'")
+            except Exception as e:
+                bot.logger.error(e)
+
+async def load_commands(bot: Bot) -> None:
+    commands_path = os.path.join(root_path, "mombot", "components", "commands")
+    for command in os.listdir(commands_path):
+        if os.path.isfile(os.path.join(commands_path, command)):
+            try:
+                await bot.load_extension("components.commands." + command[:-3])
+                bot.logger.info(f"Successfully loaded command '{command[:-3]}")
+            except Exception as e:
+                bot.logger.error(e)
 
 def read_json(file: str) -> Optional[Dict[str, Any]]:
     ''' Read JSON config file and return it '''
