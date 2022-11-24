@@ -18,8 +18,9 @@ from typing import (
     Any,
 )
 class LoggingHandler(logging.handlers.TimedRotatingFileHandler):
-    def __init__(self, app_args: Dict[str, Any], **kwargs) -> None:
-        super().__init__(app_args['log_file'], **kwargs)
+
+    def __init__(self, log_file: str) -> None:
+        super().__init__(log_file)
         self.rollover_info: Dict[str, str] = {
             'header': f"{'-'*20}Log Start{'-'*20}"
         }
@@ -36,41 +37,88 @@ class LoggingHandler(logging.handlers.TimedRotatingFileHandler):
         if self.stream is not None:
             self.stream.write("\n".join(lines) + "\n")
 
-def setup_logging(app_args: Dict[str, Any]
-                  ) -> Tuple[logging.StreamHandler,
-                             Optional[LoggingHandler],
-                             Optional[str]]:
-    root_logger = logging.getLogger()
-    root_logger.setLevel(app_args.get("log_level", logging.INFO))
-    stdout_handler = logging.StreamHandler(sys.stdout)
-    format = logging.Formatter(
-        '[%(filename)s:%(funcName)s()] - %(message)s')
-    stdout_handler.setFormatter(format)
-    warning: Optional[str] = None
-    file_handler: Optional[LoggingHandler] = None
-    log_file: str = app_args.get('log_file', "")
-    if log_file:
-        try:
-            file_handler = LoggingHandler(
-                app_args, when='midnight', backupCount=2)
-            formatter = logging.Formatter(
-                '%(asctime)s [%(filename)s:%(funcName)s()] - %(message)s')
-            file_handler.setFormatter(formatter)
-        except Exception:
-            log_file = os.path.normpath(log_file)
-            dir_name = os.path.dirname(log_file)
-            warning = f"Unable to create log file at '{log_file}'. " \
-                      f"Make sure that the folder '{dir_name}' exists. "
-    return stdout_handler, file_handler, warning
+class ColorFormatter(logging.Formatter):
 
-def setup_logging_custom(app_args: Dict[str, Any]
-                         ) -> Tuple[logging.StreamHandler,
-                                    Optional[LoggingHandler]]:
-    stdout_handler = logging.StreamHandler(sys.stdout)
-    format = logging.Formatter(
-        f'[{app_args.get("name","%(filename)")}] - %(message)s')
-    stdout_handler.setFormatter(format)
-    return stdout_handler, None
+    # \x1b[XXXm where XXX is a separated list of commands
+    # 30-37 black, red, green, yellow, blue, magenta, cyan and white
+    # 40-47 same except for the background
+    # 90-97 same but "bright" foreground
+    # 100-107 same as bright but for background.
+    # 1 is bold, 2 is dim, 0 is reset, 4 is underlined.
+
+    LEVEL_COLOURS = [
+        (logging.DEBUG, '\x1b[40;1m'),
+        (logging.INFO, '\x1b[34;1m'),
+        (logging.WARNING, '\x1b[33;1m'),
+        (logging.ERROR, '\x1b[31m'),
+        (logging.CRITICAL, '\x1b[41m'),
+    ]
+
+    FORMATS = {
+        level: logging.Formatter(
+            f'\x1b[30;1m%(asctime)s\x1b[0m {colour}%(levelname)-8s' +
+            f'\x1b[0m \x1b[35m%(name)s\x1b[0m %(message)s',
+            '%Y-%m-%d %H:%M:%S',
+        )
+        for level, colour in LEVEL_COLOURS
+    }
+
+    def format(self, record):
+        formatter = self.FORMATS.get(record.levelno)
+        if formatter is None:
+            formatter = self.FORMATS[logging.DEBUG]
+
+        if record.exc_info:
+            text = formatter.formatException(record.exc_info)
+            record.exc_text = f'\x1b[31m{text}\x1b[0m'
+
+        output = formatter.format(record)
+
+        record.exc_text = None
+        return output
+
+def setup_logging(
+    name: str,
+    handler: Optional[logging.Handler] = None,
+    formatter: Optional[logging.Formatter] = None,
+    level: int = -1,
+    root: Optional[bool] = None,
+    log_path: Optional[str] = None
+) -> None:
+
+    if level == -1:
+        level = logging.INFO
+
+    if handler is None:
+        handler = logging.StreamHandler()
+
+    if formatter is None:
+        if isinstance(handler, logging.StreamHandler):
+            formatter = ColorFormatter()
+        else:
+            dt_fmt = '%Y-%m-%d %H:%M:%S'
+            fmt = '[{asctime}] [{levelname:<8}] {name}: {message}'
+            formatter = logging.Formatter(fmt, dt_fmt, style='{')
+
+    file_handler = None
+    if root:
+        logger = logging.getLogger()
+
+        if log_path:
+            file_handler = LoggingHandler(log_path)
+            dt_fmt = '%Y-%m-%d %H:%M:%S'
+            fmt = '[{asctime}] [{levelname:<8}] {name}: {message}'
+            file_formatter = logging.Formatter(fmt, dt_fmt, style='{')
+            file_handler.setFormatter(file_formatter)
+    else:
+        # library, _, _ = name.partition('.')
+        logger = logging.getLogger(name)
+
+    handler.setFormatter(formatter)
+    logger.setLevel(level)
+    logger.addHandler(handler)
+    if file_handler:
+        logger.addHandler(file_handler)
 
 def prepare_recipes(input: str, output: str) -> None:
     with open(input, "r", encoding="utf-8") as fi:

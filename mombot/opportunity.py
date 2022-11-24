@@ -26,7 +26,7 @@ from discord.ext import commands
 from components.views import Listings
 from components.api import API
 from components.scheduler import Scheduler
-from utils import setup_logging, setup_logging_custom, id_generator, Color
+from utils import id_generator, setup_logging, Color
 
 from apscheduler.job import Job
 
@@ -49,22 +49,15 @@ class Bot(commands.Bot):
         super().__init__(command_prefix=commands.when_mentioned_or('!'),
                          intents=intents)
 
-        self.logger = logging.getLogger(__name__)
-        stdout_hdlr, file_hdlr, warn = setup_logging(
-            {"log_file": os.path.join(root_path, "logs", "opportunity.log"),
-             "log_level": logging.INFO})
-        self.logger.addHandler(stdout_hdlr)
-        if file_hdlr:
-            self.logger.addHandler(file_hdlr)
-
-        aps_logger = logging.getLogger("apscheduler")
-        stdout_hdlr_aps, _ = setup_logging_custom(
-            {"name": "apscheduler", "log_level": logging.INFO})
-        aps_logger.addHandler(stdout_hdlr_aps)
+        self.logger = logging.getLogger("opportunity.bot")
+        log_path = os.path.join(root_path, "logs", "opportunity.log")
+        setup_logging("opportunity", root=True, log_path=log_path)
+        logging.getLogger("discord").propagate = False
 
         self.config = config
 
-        self.recipes = read_json(os.path.join(
+        self.recipes = read_json(self, os.path.join(
+            root_path,
             self.config["misc"]["json_folder"],
             "recipes.json"))
 
@@ -104,33 +97,34 @@ async def load_cogs(bot: Bot) -> None:
                 bot.logger.error(e)
 
 async def load_commands(bot: Bot) -> None:
-    commands_path = os.path.join(root_path, "mombot", "components", "commands")
+    commands_path = os.path.join(root_path, "mombot", "commands")
     for command in os.listdir(commands_path):
         if os.path.isfile(os.path.join(commands_path, command)):
             try:
-                await bot.load_extension("components.commands." + command[:-3])
+                await bot.load_extension("commands." + command[:-3])
                 bot.logger.info(f"Successfully loaded command '{command[:-3]}")
             except Exception as e:
                 bot.logger.error(e)
 
-def read_json(file: str) -> Optional[Dict[str, Any]]:
+def read_json(bot: Bot, file: str) -> Optional[Dict[str, Any]]:
     ''' Read JSON config file and return it '''
     if os.path.isfile(file):
         if os.path.getsize(file) > 0:
             with open(file, "r", encoding="utf-8") as f:
                 try:
                     data = json.load(f)
-                    bot.logger.info(f"Successfully read file {file}.")
+                    filename = os.path.basename(file)
+                    bot.logger.info(f"Successfully read file '{filename}'")
                 except JSONDecodeError:
                     data = {}
-                    bot.logger.info(f"Error reading file {file}.")
+                    bot.logger.error(f"Error reading file {file}.")
         else:
             bot.logger.info(f"Successfully read empty file {file}.")
             return {}
         return data
     return None
 
-def save_json(file: str, data: Dict[str, Any]) -> None:
+def save_json(bot: Bot, file: str, data: Dict[str, Any]) -> None:
     ''' Save data variable as JSON config file '''
     if os.path.isfile(file):
         with open(file, "w", encoding="utf-8") as f:
@@ -333,11 +327,11 @@ async def level(ctx: commands.Context):
                          value="\n".join(buildings.keys()), inline=True)
         em_msg.add_field(name="Rarities",
                          value="\n".join([
-                              buildings[x]["rarities"] for x in buildings]),
+                             buildings[x]["rarities"] for x in buildings]),
                          inline=True)
         em_msg.add_field(name="Level",
                          value="\n".join([buildings[x]["max_level"]
-                                          for x in buildings]),
+                                         for x in buildings]),
                          inline=True)
         await message.delete()
         message = await ctx.send(ctx.author.mention, embed=em_msg)
@@ -432,7 +426,7 @@ async def reminders(ctx: commands.Context) -> None:
 @bot.command(name="tasks", aliases=["recipes"])
 async def tasks(ctx: commands.Context) -> None:
     msg = f"A complete list of all recipes is available at " + \
-          config["misc"]["recipes_url"]
+        config["misc"]["recipes_url"]
     em_msg = discord.Embed(color=Color.DARK_GRAY)
     em_msg.add_field(name="Recipes", value=msg)
     await ctx.send(embed=em_msg)
