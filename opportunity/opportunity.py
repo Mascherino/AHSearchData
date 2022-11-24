@@ -88,7 +88,8 @@ data: Dict[str, str] = {}
 ''' Functions '''
 
 async def load_cogs(bot: Bot) -> None:
-    components_path = os.path.join(root_path, "mombot", "components", "cogs")
+    components_path = os.path.join(root_path,
+                                   "opportunity", "components", "cogs")
     for component in os.listdir(components_path):
         if os.path.isfile(os.path.join(components_path, component)):
             try:
@@ -98,7 +99,7 @@ async def load_cogs(bot: Bot) -> None:
                 bot.logger.error(e)
 
 async def load_commands(bot: Bot) -> None:
-    commands_path = os.path.join(root_path, "mombot", "commands")
+    commands_path = os.path.join(root_path, "opportunity", "commands")
     for command in os.listdir(commands_path):
         if os.path.isfile(os.path.join(commands_path, command)):
             try:
