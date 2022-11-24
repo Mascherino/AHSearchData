@@ -67,6 +67,13 @@ class Bot(commands.Bot):
         self.scheduler.start()
 
         self.api: API = API(self)
+        self.vh = VersionHandler()
+
+        if not self.vh.is_latest:
+            self.logger.warning(
+                f"A new version is available: \x1b[31m" +
+                f"{self.vh.local_version} \x1b[0m->" +
+                f"\x1b[32m {self.vh.remote_version}")
 
     async def on_ready(self):
 
