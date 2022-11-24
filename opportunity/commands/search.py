@@ -86,16 +86,6 @@ async def special_ac(
         for building in choices if current.lower() in building.lower()
     ]
 
-async def artifact_ac(
-    interaction: discord.Interaction,
-    current: str,
-) -> List[app_commands.Choice[str]]:
-    choices = []  # TODO artifact list
-    return [
-        app_commands.Choice(name=building, value=building)
-        for building in choices if current.lower() in building.lower()
-    ]
-
 class Search(commands.Cog):
 
     def __init__(self, bot) -> None:
