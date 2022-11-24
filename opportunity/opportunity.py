@@ -26,6 +26,7 @@ from discord.ext import commands
 from components.views import Listings
 from components.api import API
 from components.scheduler import Scheduler
+from components.versionhandler import VersionHandler
 from utils import id_generator, setup_logging, Color
 
 from apscheduler.job import Job
