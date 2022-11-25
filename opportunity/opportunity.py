@@ -306,29 +306,4 @@ async def tasks(ctx: commands.Context) -> None:
     em_msg.add_field(name="Recipes", value=msg)
     await ctx.send(embed=em_msg)
 
-async def extension_ac(
-    interaction: discord.Interaction,
-    current: str,
-) -> List[app_commands.Choice[str]]:
-    choices: List[str] = list(bot.extensions.keys())
-    return [
-        app_commands.Choice(name=building, value=building)
-        for building in choices if current.lower() in building.lower()
-    ]
-
-@app_commands.command()
-@app_commands.autocomplete(extension=extension_ac)
-async def reload_ext(
-    interaction: discord.Interaction,
-    extension: str
-) -> None:
-    try:
-        await bot.reload_extension(extension)
-        await interaction.response.send_message(
-            f"Successfully reloaded '{extension}'")
-    except Exception as e:
-        bot.logger.error(e)
-
-bot.tree.add_command(reload_ext)
-
 bot.run(config["discord"]["TOKEN"])
