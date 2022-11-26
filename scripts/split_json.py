@@ -4,20 +4,17 @@ import argparse
 import logging
 import json
 import os
+from os.path import dirname as up
 
-from utils import setup_logging
+from opportunity.utils import setup_logging
 
-def main(args, loglevel):
-    stdout_hdlr, file_hdlr, warn = setup_logging({
-        "log_file": "split_json.log",
-        "log_level": loglevel})
-    logger = logging.getLogger()
-    logger.addHandler(stdout_hdlr)
-    if warn:
-        logging.error(warn)
-    else:
-        logger.addHandler(file_hdlr)
+def main(args):
+    setup_logging(
+        "split_json",
+        log_path=os.path.join(up(up(__file__)), "logs", "split_json.log"))
+    logger = logging.getLogger("split_json")
 
+    j = {}
     with open(args.json, "r", encoding="utf-8") as f:
         logging.info(f"reading {args.json}...")
         try:
@@ -39,7 +36,7 @@ def main(args, loglevel):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Does a thing to some stuff.")
+    parser = argparse.ArgumentParser(description="Split json into its keys.")
 
     parser.add_argument(
         "json",
@@ -57,7 +54,4 @@ if __name__ == '__main__':
         default="")
     args = parser.parse_args()
 
-    # Set loglevel
-    loglevel = logging.DEBUG if args.verbose else logging.INFO
-
-    main(args, loglevel)
+    main(args)
