@@ -3,6 +3,7 @@ from json.decoder import JSONDecodeError
 import os
 from os.path import dirname as up
 import re
+import string
 
 import datetime as dt
 import logging
@@ -29,7 +30,7 @@ from components.views import Listings
 from components.api import API
 from components.scheduler import Scheduler
 from components.versionhandler import VersionHandler
-from utils import id_generator, setup_logging, Color
+from utils import id_generator, setup_logging, Color, translate_bldg
 
 from apscheduler.job import Job
 
@@ -57,6 +58,7 @@ class Bot(commands.Bot):
         setup_logging("opportunity", root=True, log_path=log_path)
         logging.getLogger("discord").propagate = False
 
+        self.data = {}
         self.config = config
 
         self.recipes = read_json(self, os.path.join(
@@ -66,9 +68,10 @@ class Bot(commands.Bot):
 
         self.scheduler: Scheduler = Scheduler(
             self.config['mariadb']['credentials'])
-        self.scheduler.start()
 
         self.api: API = API(self)
+        self.data["clean_bldg"] = self.api.get_building_names_clean()
+
         self.vh = VersionHandler()
 
         if not self.vh.is_latest:
@@ -84,7 +87,7 @@ class Bot(commands.Bot):
 
         await self.change_presence(activity=discord.Game(
                                    name="Million on Mars"))
-
+        self.scheduler.start()
         await load_cogs(self)
         await load_commands(self)
         print(await self.tree.sync())
@@ -150,6 +153,13 @@ async def print_error(ctx: commands.Context, error: Any) -> None:
 
 async def edit_msg_to_error(msg: discord.Message, error: Any) -> None:
     await msg.edit(content=error)
+
+async def remind(user: int, channel_id: int, **kwargs):
+    channel = bot.get_channel(channel_id)
+    u: discord.User = await bot.fetch_user(user)
+    em_msg = discord.Embed(title="tasks ready")
+    if isinstance(channel, discord.TextChannel):
+        await channel.send(content=f"{u.mention}", embed=em_msg)
 
 bot = Bot()
 
@@ -221,24 +231,69 @@ async def test(ctx: commands.Context):
         remind,
         "date",
         next_run_time=dt.datetime.now()+dt.timedelta(seconds=10),
-        kwargs={"user": ctx.author.id, "channel_id": ctx.channel.id})
+        kwargs={
+            "user": ctx.author.id,
+            "channel_id": ctx.channel.id,
+            "task_name": "test"})
+    print(bot.scheduler.running)
+    print(str(bot.scheduler.get_jobs()))
 
-async def remind(user: int, channel_id: int, **kwargs):
-    channel = bot.get_channel(channel_id)
-    u: discord.User = await bot.fetch_user(user)
-    em_msg = discord.Embed(title="tasks ready")
-    if isinstance(channel, discord.TextChannel):
-        await channel.send(content=f"{u.mention}", embed=em_msg)
+async def building_ac(
+    interaction: discord.Interaction,
+    current: str,
+) -> List[app_commands.Choice[str]]:
+    building: str = interaction.namespace.building
+    choices = []
+    if bot.data["clean_bldg"]:
+        choices = bot.data["clean_bldg"]
+        if len(building) >= 1:
+            choices = [s for s in choices if building.lower() in s.lower()]
+        if len(choices) > 25:
+            choices = []
+    return [
+        app_commands.Choice(
+            name=string.capwords(building.replace("_", " ")),
+            value=building)
+        for building in choices if current.lower() in building.lower()
+    ]
 
-@bot.command(name="start", aliases=["addreminder"])
-async def start(ctx: commands.Context, task: str) -> None:
-    if bot.recipes:
-        try:
-            task_dir = bot.recipes[task]
-        except KeyError as e:
-            bot.logger.error(f"{task} key not found in recipes.")
-            await ctx.send(f"{task} not found in recipes.")
-            return
+async def recipe_ac(
+    interaction: discord.Interaction,
+    current: str,
+) -> List[app_commands.Choice[str]]:
+    building: str = interaction.namespace.building
+    level: int = interaction.namespace.level
+    category = ""
+    building = translate_bldg(building)
+    if not category:
+        category = building + "_C" + str(level)
+    recipes: Dict[str, dict] = bot.data["prepared"][category]
+    choices = recipes
+    r: Optional[str] = interaction.namespace.recipe
+    if len(recipes) > 25:
+        if r:
+            choices = [s for s in choices if r.lower() in s.lower()]
+        else:
+            choices = []
+        if len(choices) > 25:
+            choices = []
+    return [
+        app_commands.Choice(name=recipes[recipe]["name"], value=recipe)
+        for recipe in choices if current.lower() in recipe.lower()
+    ]
+
+@app_commands.command()
+@app_commands.autocomplete(
+    building=building_ac,
+    recipe=recipe_ac)
+async def reminder(
+    interaction: discord.Interaction,
+    building: str,
+    level: app_commands.Range[int, 1, 10],
+    recipe: str
+) -> None:
+    await interaction.response.defer(thinking=True)
+    try:
         job_id = id_generator(8)
         for _ in range(0, 100):
             try:
@@ -247,63 +302,32 @@ async def start(ctx: commands.Context, task: str) -> None:
                     id=job_id,
                     trigger="date",
                     next_run_time=dt.datetime.now()+dt.timedelta(
-                        seconds=task_dir["durationSeconds"]),
+                        seconds=bot.data["recipes"][recipe]["durationSeconds"]),
                     kwargs={
-                        "user": ctx.author.id,
-                        "channel_id": ctx.channel.id,
-                        "task_name": task_dir["name"]})
+                        "user": interaction.user.id,
+                        "channel_id": interaction.channel_id,
+                        "task_name": bot.data["recipes"][recipe]["name"]})
             except ConflictingIdError as e:
                 bot.logger.error("Conflicting id in job")
             break
-        task_time = task_dir["durationSeconds"]
+        task_time = bot.data["recipes"][recipe]["durationSeconds"]
         m, s = divmod(task_time, 60)
         h, m = divmod(m, 60)
         task_time = '{:0>2}:{:0>2}:{:0>2}'.format(h, m, s)
         message = f"I'll remind you in {task_time} to " + \
-                  f"finish your {task_dir['name']} task(s)"
+                  f"finish your {bot.data['recipes'][recipe]['name']} task(s)"
         em_msg = discord.Embed(color=Color.DARK_GRAY)
         em_msg.add_field(name="Recipes", value=message)
-        await ctx.send(embed=em_msg, ephemeral=True)
+    except Exception as e:
+        bot.logger.error(e)
 
-@bot.command(name="delreminder", aliases=["stop"])
-async def delreminder(ctx: commands.Context, job_id: str) -> None:
-    job: Optional[Job] = bot.scheduler.get_job(job_id)
-    if isinstance(job, Job):
-        if job.kwargs["user"] == ctx.author.id:
-            bot.scheduler.remove_job(job_id)
-            await ctx.send(f"Successfully removed job with id {job_id}")
-        else:
-            await ctx.send(f"You cannot remove a reminder from another user")
-    else:
-        bot.logger.error(f"Could not find job with id {job_id}")
-        await ctx.send(f"Could not find reminder with id {job_id}")
+# @bot.command(name="tasks", aliases=["recipes"])
+# async def tasks(ctx: commands.Context) -> None:
+#     msg = f"A complete list of all recipes is available at " + \
+#         config["misc"]["recipes_url"]
+#     em_msg = discord.Embed(color=Color.DARK_GRAY)
+#     em_msg.add_field(name="Recipes", value=msg)
+#     await ctx.send(embed=em_msg)
 
-@bot.command(name="reminders", aliases=["reminder"])
-async def reminders(ctx: commands.Context) -> None:
-    jobs: Optional[Sequence[Job]] = bot.scheduler.get_user_jobs(ctx.author.id)
-    em_msg = discord.Embed(title=f"Reminders for {ctx.author.display_name}",
-                           color=Color.DARK_GRAY)
-
-    task_names = "\n".join([job.kwargs["task_name"] for job in jobs]
-                           if jobs else ["-"])
-    em_msg.add_field(name=f"Task", value=task_names)
-
-    remind_time = "\n".join([
-        str(job.next_run_time.replace(microsecond=0)) for job in jobs]
-        if jobs else ["-"])
-    em_msg.add_field(name="Due time", value=remind_time)
-
-    ids = "\n".join([job.id for job in jobs] if jobs else ["-"])
-    em_msg.add_field(name="ID", value=ids)
-
-    await ctx.send(embed=em_msg)
-
-@bot.command(name="tasks", aliases=["recipes"])
-async def tasks(ctx: commands.Context) -> None:
-    msg = f"A complete list of all recipes is available at " + \
-        config["misc"]["recipes_url"]
-    em_msg = discord.Embed(color=Color.DARK_GRAY)
-    em_msg.add_field(name="Recipes", value=msg)
-    await ctx.send(embed=em_msg)
-
+bot.tree.add_command(reminder)
 bot.run(config["discord"]["TOKEN"])

@@ -17,6 +17,34 @@ from typing import (
     Dict,
     Any,
 )
+
+def translate_bldg(building: str):
+    translate = {
+        "solar_panel": "solar",
+        "greenhouse": "greenhouse",
+        "water_filter": "water_filter",
+        "cad": "cad",
+        "grindnbrew": "gnb",
+        "polar_workshop": "polar",
+        "mining_rig": "mining",
+        "machine_shop": "machine",
+        "chem_lab": "chem_lab",
+        "3d_print_shop": "3d_print",
+        "smelter": "smelter",
+        "sab_reactor": "sab",
+        "rover_works": "rover_works",
+        "engineering_bay": "engineering",
+        "concrete_habitat": "concrete_habitat",
+        "shelter": "shelter",
+        "thorium-reactor": "reactor",
+        "cantina": "cantina_gig",
+        "training_hall": "training_hall",
+        "bazaar": "bazaar",
+        "teashop": "teashop",
+        "gallery": "gallery"
+    }
+    return translate[building]
+
 class LoggingHandler(logging.handlers.TimedRotatingFileHandler):
 
     def __init__(self, log_file: str) -> None:
@@ -87,7 +115,7 @@ def setup_logging(
 ) -> None:
 
     if level == -1:
-        level = logging.INFO
+        level = logging.DEBUG
 
     if handler is None:
         handler = logging.StreamHandler()
