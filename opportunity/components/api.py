@@ -94,7 +94,7 @@ class API():
         except KeyError:
             return None
 
-    def get_buildings(self) -> Optional[Dict[str, Any]]:
+    def get_buildings(self) -> Optional[List[Dict[str, Any]]]:
         '''
         Get onmars land.plots buildings
 
@@ -116,7 +116,7 @@ class API():
         except KeyError:
             return None
 
-    def extract_data(self, json: Dict[str, Any], d: Any) -> List[Any]:
+    def extract_data(self, json: List[Dict[str, Any]], d: Any) -> List[Any]:
         data = []
         for item in json:
             data.append(item[d])
