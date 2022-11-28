@@ -318,10 +318,14 @@ async def reminder(
         m, s = divmod(task_time, 60)
         h, m = divmod(m, 60)
         task_time = '{:0>2}:{:0>2}:{:0>2}'.format(h, m, s)
-        message = f"I'll remind you in {task_time} to " + \
-                  f"finish your {bot.data['recipes'][recipe]['name']} task(s)"
-        em_msg = discord.Embed(color=Color.DARK_GRAY)
-        em_msg.add_field(name="Recipes", value=message)
+        message = f"You will be reminded in **{task_time}** to " + \
+                  f"finish your " + \
+                  f"**{bot.data['recipes'][recipe]['name']}** task(s)"
+        em_msg = discord.Embed(
+            title="Reminders",
+            color=Color.GREEN,
+            description=message)
+        await interaction.followup.send(embed=em_msg)
     except Exception as e:
         bot.logger.error(e)
 
