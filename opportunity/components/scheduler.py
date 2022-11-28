@@ -21,7 +21,7 @@ class Scheduler(AsyncIOScheduler):
             timezone=str(tzlocal.get_localzone()))
 
     def get_user_jobs(self, user: int, string: bool = False
-                      ) -> Optional[Sequence[Job]]:
+                      ) -> Optional[List[Job]]:
         jobs = self.get_jobs()
         user_jobs = []
         for job in jobs:
