@@ -32,7 +32,7 @@ class Reminder(commands.Cog):
         current: str,
     ) -> List[app_commands.Choice[str]]:
         job_name: str = interaction.namespace.job
-        choices = []
+        choices: List[Job] = []
         jobs: Optional[List[Job]]
         jobs = self.bot.scheduler.get_user_jobs(interaction.user.id)
         choices = []
