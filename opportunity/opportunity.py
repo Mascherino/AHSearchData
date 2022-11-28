@@ -271,7 +271,7 @@ async def recipe_ac(
     building = translate_bldg(building)
     if not category:
         category = building + "_C" + str(level)
-    recipes: Dict[str, dict] = bot.data["prepared"][category]
+    recipes = bot.data["prepared"][category]
     choices = recipes
     r: Optional[str] = interaction.namespace.recipe
     if len(recipes) > 25:
