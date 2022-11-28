@@ -37,7 +37,8 @@ class Buildings(commands.Cog):
         facs = []
         artifacts = []
         try:
-            buildings: Optional[Dict[str, str]] = self.bot.api.get_buildings()
+            buildings: Optional[List[Dict[str, str]]]
+            buildings = self.bot.api.get_buildings()
             if buildings:
                 bldg_list: Optional[List[str]] = self.bot.api.extract_data(
                     buildings, "name")
