@@ -6,7 +6,8 @@ from typing import (
     Optional,
     Dict,
     List,
-    Literal
+    Literal,
+    Any
 )
 
 import discord
@@ -91,6 +92,8 @@ class Search(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot: Bot = bot
         self.logger = logging.getLogger("opportunity." + __name__)
+        if buildings := self.bot.api.get_buildings():
+            self.buildings = {item["name"]: item["name"] for item in buildings}
 
     @app_commands.command()
     @app_commands.autocomplete(core=core_ac, advanced=advanced_ac,
@@ -131,15 +134,12 @@ class Search(commands.Cog):
         else:
             building = building.replace(" ", "_")
         if generation == "Gen 2":
-            if building in [
-                "solar_panel", "cad", "water_filter",
-                "greenhouse", "polar_workshop"
-            ]:
-                building = building + "-22"
-            else:
-                building = building + "-gen2"
+            if temp := self.buildings.get(building + "-22", None) or \
+                    self.buildings.get(building + "-gen2", None):
+                building = temp
         elif generation == "Gen 3":
-            building = building + "-gen3"
+            if temp := self.buildings.get(building + "-gen3", None):
+                building = temp
         building = building + "_" + rarity[0] + str(level)
         self.logger.info(f"Getting listings for {building}")
         listings = self.bot.api.get_listings(building, 1, amount)
