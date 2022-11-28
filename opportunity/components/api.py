@@ -121,3 +121,20 @@ class API():
         for item in json:
             data.append(item[d])
         return data
+
+    def get_building_names_clean(self) -> Optional[List[str]]:
+        buildings = []
+        data = self.get_buildings()
+        if data:
+            extracted: List[str] = self.extract_data(data, "name")
+            for name in extracted:
+                s = name.rsplit("_", 1)
+                if len(s) > 1:
+                    if not s[1] == "A":
+                        if s[0] not in buildings and \
+                                s[0] not in ["available", "total"] and \
+                                "-22" not in s[0] and \
+                                "-gen2" not in s[0] and \
+                                "-gen3" not in s[0]:
+                            buildings.append(s[0])
+        return buildings
