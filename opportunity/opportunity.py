@@ -57,14 +57,11 @@ class Bot(commands.Bot):
         log_path = os.path.join(root_path, "logs", "opportunity.log")
         setup_logging("opportunity", root=True, log_path=log_path)
         logging.getLogger("discord").propagate = False
+        logging.getLogger("apscheduler").setLevel(logging.DEBUG)
 
-        self.data = {}
         self.config = config
 
-        self.recipes = read_json(self, os.path.join(
-            root_path,
-            self.config["misc"]["json_folder"],
-            "recipes.json"))
+        self.data = load_data(self)
 
         self.scheduler: Scheduler = Scheduler(
             self.config['mariadb']['credentials'])
@@ -119,6 +116,13 @@ async def load_commands(bot: Bot) -> None:
                 bot.logger.info(f"Successfully loaded command '{command[:-3]}")
             except Exception as e:
                 bot.logger.error(e)
+
+def load_data(bot: Bot) -> Dict[str, Any]:
+    json_path = os.path.join(root_path, bot.config["misc"]["json_folder"])
+    data = {}
+    for file in os.listdir(json_path):
+        data[file[:-5]] = read_json(bot, os.path.join(json_path, file))
+    return data
 
 def read_json(bot: Bot, file: str) -> Optional[Dict[str, Any]]:
     ''' Read JSON config file and return it '''
