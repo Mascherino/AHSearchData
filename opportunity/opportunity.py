@@ -161,7 +161,9 @@ async def edit_msg_to_error(msg: discord.Message, error: Any) -> None:
 async def remind(user: int, channel_id: int, **kwargs):
     channel = bot.get_channel(channel_id)
     u: discord.User = await bot.fetch_user(user)
-    em_msg = discord.Embed(title="tasks ready")
+    desc = f"Your **{kwargs['task_name']}** tasks are ready"
+    em_msg = discord.Embed(title="Reminders", description=desc,
+                           color=Color.GREEN)
     if isinstance(channel, discord.TextChannel):
         await channel.send(content=f"{u.mention}", embed=em_msg)
 
