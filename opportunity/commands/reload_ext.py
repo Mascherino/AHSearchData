@@ -13,6 +13,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from utils import Color
+
 if TYPE_CHECKING:
     from opportunity.opportunity import Bot
 
@@ -47,8 +49,11 @@ class Reload_ext(commands.Cog):
         try:
             await self.bot.reload_extension(extension)
             self.logger.info(f"Successfully reloaded '{extension}'")
-            await interaction.response.send_message(
-                f"Successfully reloaded '{extension}'")
+            em_msg = discord.Embed(
+                title="Reload Extension",
+                description=f"Successfully reloaded '{extension}'",
+                color=Color.GREEN)
+            await interaction.response.send_message(embed=em_msg)
         except Exception as e:
             self.logger.error(e)
 
@@ -58,9 +63,16 @@ class Reload_ext(commands.Cog):
         interaction: discord.Interaction,
         error: app_commands.errors.AppCommandError
     ) -> None:
+        em_msg = discord.Embed(
+            title="Error",
+            color=Color.RED)
         if isinstance(error, app_commands.errors.CheckFailure):
-            await interaction.response.send_message(
-                "Error: Command can only be invoked by <@227087936464748545>")
+            em_msg.description = "Error: Command can only be " + \
+                                 "invoked by <@227087936464748545>"
+            await interaction.response.send_message(embed=em_msg)
+        else:
+            em_msg.description = str(error)
+            await interaction.response.send_message(embed=em_msg)
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Reload_ext(bot))
