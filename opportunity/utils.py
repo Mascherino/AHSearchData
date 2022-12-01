@@ -18,6 +18,17 @@ from typing import (
     Any,
 )
 
+def abbr_to_full(abbr: str) -> str:
+    full = {
+        "n": "Novice",
+        "a": "Apprentice",
+        "j": "Journeyman",
+        "e": "Expert",
+        "m": "Master",
+        "ar": "Artisan"
+    }
+    return full[abbr]
+
 def translate_bldg(building: str):
     translate = {
         "solar_panel": "solar",
