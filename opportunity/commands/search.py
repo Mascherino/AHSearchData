@@ -95,7 +95,8 @@ class Search(commands.Cog):
         if buildings := self.bot.api.get_buildings():
             self.buildings = {item["name"]: item["name"] for item in buildings}
 
-    @app_commands.command()
+    @app_commands.command(description="Search for buildings" +
+                                      " on plots on AtomicHub")
     @app_commands.autocomplete(core=core_ac, advanced=advanced_ac,
                                special=special_ac)
     async def search(
