@@ -87,6 +87,7 @@ class Bot(commands.Bot):
         self.scheduler.start()
         await load_cogs(self)
         await load_commands(self)
+        self.emoji = await load_emojis(self)
         print(await self.tree.sync())
 
 
@@ -123,6 +124,14 @@ def load_data(bot: Bot) -> Dict[str, Any]:
     for file in os.listdir(json_path):
         data[file[:-5]] = read_json(bot, os.path.join(json_path, file))
     return data
+
+async def load_emojis(bot: Bot) -> Dict[str, str]:
+    guild: discord.Guild = await bot.fetch_guild(1047714035661021245)
+    emojis = await guild.fetch_emojis()
+    result = {}
+    for emoji in emojis:
+        result[emoji.name] = str(emoji)
+    return result
 
 def read_json(bot: Bot, file: str) -> Optional[Dict[str, Any]]:
     ''' Read JSON config file and return it '''
