@@ -1,5 +1,6 @@
 import requests
 import pyourls3
+import datetime as dt
 
 # Annotation imports
 from typing import (
@@ -138,3 +139,10 @@ class API():
                                 "-gen3" not in s[0]:
                             buildings.append(s[0])
         return buildings
+
+    def get_market_stats(self) -> Optional[Dict[str, Any]]:
+        market_url = "https://milliononmars.io/api/v1/2d/marketItemStats"
+        market_data = {}
+        market_data["data"] = requests.get(market_url).json()
+        market_data["timestamp"] = dt.datetime.now()
+        return market_data
