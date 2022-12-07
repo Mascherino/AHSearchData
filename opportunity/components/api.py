@@ -156,3 +156,7 @@ class API():
             self.wax_usd,
             headers={"X-CMC_PRO_API_KEY": self.CMC_KEY}).json()
         return r["data"]["2300"]["quote"]["USD"]["price"]
+
+    def get_wax_dusk(self) -> float:
+        r = requests.get(self.wax_dusk).json()
+        return r["last_price"]
