@@ -36,6 +36,10 @@ class API():
         self.yourls: pyourls3.Yourls = pyourls3.Yourls(
             addr=url,
             key=secret)
+        self.wax_dusk = "https://wax.alcor.exchange/api/markets/262"
+        self.CMC_KEY = "5234f810-95e0-4977-94dc-25478c62b302"
+        self.wax_usd = "https://pro-api.coinmarketcap.com/v2/" + \
+                       "cryptocurrency/quotes/latest"
 
     def get_listings(self, building: str, page_nr: int, amount: int = 1
                      ) -> Optional[Dict[Union[str, int], Any]]:
@@ -146,3 +150,9 @@ class API():
         market_data["data"] = requests.get(market_url).json()
         market_data["timestamp"] = dt.datetime.now()
         return market_data
+
+    def get_wax_usd(self) -> float:
+        r = requests.get(
+            self.wax_usd,
+            headers={"X-CMC_PRO_API_KEY": self.CMC_KEY}).json()
+        return r["data"]["2300"]["quote"]["USD"]["price"]
