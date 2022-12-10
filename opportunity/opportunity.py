@@ -4,6 +4,7 @@ import os
 from os.path import dirname as up
 import re
 import string
+import requests_cache
 
 import datetime as dt
 import logging
@@ -76,6 +77,11 @@ class Bot(commands.Bot):
                 f"A new version is available: \x1b[31m" +
                 f"{self.vh.local_version} \x1b[0m->" +
                 f"\x1b[32m {self.vh.remote_version}")
+
+        cache = requests_cache.install_cache(
+            "opportunity",
+            backend="sqlite",
+            expire_after=300)
 
     async def on_ready(self):
 
