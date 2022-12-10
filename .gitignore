@@ -4,3 +4,4 @@ config.cfg
 *.log.*
 data/*
 .vscode/
+*.sqlite
