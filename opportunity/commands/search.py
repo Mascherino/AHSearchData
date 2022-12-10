@@ -74,14 +74,12 @@ async def special_ac(
 ) -> List[app_commands.Choice[str]]:
     ns: app_commands.Namespace = interaction.namespace
     choices = []
-    if not ns.rarity == "Special":
-        pass
-    else:
+    if ns.rarity == "Special":
         if ns.level <= 5:
             choices.extend(["Bazaar", "Teashop"])
         if ns.level <= 6:
             choices.append("Cantina")
-    choices.extend(['Pirate Radio', 'Library', 'Training Hall', 'Gallery'])
+        choices.extend(['Pirate Radio', 'Library', 'Training Hall', 'Gallery'])
     return [
         app_commands.Choice(name=building, value=building)
         for building in choices if current.lower() in building.lower()
@@ -128,8 +126,16 @@ class Search(commands.Cog):
                             "building when using special rarity",
                 color=Color.RED))
             return
-
-        building: str = list(args.items())[0][1].lower().replace(".", "")
+        try:
+            building: str = list(args.items())[0][1].lower().replace(".", "")
+        except IndexError as e:
+            self.logger.error(e)
+            em_msg = discord.Embed(
+                title="Error",
+                description="You must specify exactly one category " +
+                            "(core, advanced or special)",
+                color=Color.RED)
+            return
         if building in ["thorium reactor", "ground control"]:
             building = building.replace(" ", "-")
         else:
