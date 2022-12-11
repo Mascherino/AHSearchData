@@ -45,27 +45,17 @@ class Listings(discord.ui.View):
                             f"(page {self.page})",
                 color=0x00ff00)
 
-            em_msg.add_field(
-                name="Listings",
-                value="\n".join([
-                    listings[item]["link"] for item in listings.keys()]),
-                inline=True)
-
-            em_msg.add_field(
-                name="Cost",
-                value="\n".join([
-                    str(listings[item]["price"]) + " " +
-                    listings[item]["token_symbol"]
-                    for item in listings.keys()]),
-                inline=True)
-
-            em_msg.add_field(
-                name="Land(s)",
-                value="\n".join([
-                    listings[item]["land"]["rarity"]
-                    if isinstance(listings[item]["land"], dict)
-                    else "Bundle" for item in listings.keys()]),
-                inline=True)
+            for item in listings:
+                em_msg.add_field(
+                    name=f"{listings[item]['name']}",
+                    value="\n".join([
+                        f"[Link]({listings[item]['link']})",
+                        f"{listings[item]['price']} " +
+                        f"{listings[item]['token_symbol']}",
+                        listings[item]["land"]["rarity"]
+                        if isinstance(listings[item]["land"], dict)
+                        else "Bundle"])
+                )
             listing_view = Listings(self.building, self.page)
             await interaction.followup.send(embed=em_msg,
                                             view=listing_view)
