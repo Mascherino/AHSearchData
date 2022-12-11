@@ -101,7 +101,7 @@ class Search(commands.Cog):
             self,
             interaction: discord.Interaction,
             generation: Literal["Gen 1", "Gen 2", "Gen 3"],
-            level: app_commands.Range[int, 1, 10],
+            level: Literal["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
             rarity: Literal["Common", "Uncommon", "Rare", "Epic",
                             "Legendary", "Mythic", "Special"],
             core: str = "",
@@ -151,33 +151,23 @@ class Search(commands.Cog):
         self.logger.info(f"Getting listings for {building}")
         listings = self.bot.api.get_listings(building, 1, amount)
         if listings:
-            description = f"Listings containing {amount} {building} (page 1)"
+            description = f"Listings containing {amount} " + \
+                          f"{list(args.items())[0][1]} (page 1)"
             em_msg = discord.Embed(
                 title="Listings",
                 description=description,
                 color=Color.GREEN)
-
-            em_msg.add_field(
-                name="Listings",
-                value="\n".join([
-                    listings[item]["link"] for item in listings.keys()]),
-                inline=True)
-
-            em_msg.add_field(
-                name="Cost",
-                value="\n".join([
-                    str(listings[item]["price"]) +
-                    " " + listings[item]["token_symbol"]
-                    for item in listings.keys()]),
-                inline=True)
-
-            em_msg.add_field(
-                name="Land(s)",
-                value="\n".join([
-                    listings[item]["land"]["rarity"]
-                    if isinstance(listings[item]["land"], dict)
-                    else "Bundle" for item in listings.keys()]),
-                inline=True)
+            for i, item in enumerate(listings):
+                em_msg.add_field(
+                    name=f"{listings[item]['name']}",
+                    value="\n".join([
+                        f"[Link]({listings[item]['link']})",
+                        f"{listings[item]['price']} " +
+                        f"{listings[item]['token_symbol']}",
+                        listings[item]["land"]["rarity"]
+                        if isinstance(listings[item]["land"], dict)
+                        else "Bundle"])
+                )
             view = Listings(building, 1)
             await interaction.followup.send(embed=em_msg, view=view)
         else:
