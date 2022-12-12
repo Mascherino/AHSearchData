@@ -48,8 +48,7 @@ config.read(config_path)
 class Bot(commands.Bot):
 
     def __init__(self):
-        intents = discord.Intents.default()
-        intents.message_content = True
+        intents = discord.Intents.all()
 
         super().__init__(command_prefix=commands.when_mentioned_or('!'),
                          intents=intents)
