@@ -95,6 +95,9 @@ class Bot(commands.Bot):
         self.emoji = await load_emojis(self)
         print(await self.tree.sync())
 
+        # Reload help after self.extensions is populated
+        await self.reload_extension("commands.help")
+
 
 ''' Variables '''
 
