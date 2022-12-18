@@ -70,9 +70,12 @@ class API():
                     try:
                         for count, item in enumerate(listings):
                             links.setdefault(count, {})
-                            links[count]["link"] = self.yourls.shorten(
-                                f"https://wax.atomichub.io/market/sale/" +
-                                f"{item['sale_id']}")["shorturl"]
+                            # links[count]["link"] = self.yourls.shorten(
+                            #     f"https://wax.atomichub.io/market/sale/" +
+                            #     f"{item['sale_id']}")["shorturl"]
+                            links[count]["link"] = \
+                                f"https://wax.atomichub.io/market/sale/" + \
+                                f"{item['sale_id']}"
                             links[count]["price"] = int(
                                 round(int(item["price"]["amount"]) /
                                       wax_precision, 0))
@@ -86,7 +89,10 @@ class API():
                                             {"rarity": land["data"]["rarity"]})
                                     except KeyError:
                                         pass
+                                links[count]["name"] = "Bundle"
                             else:
+                                name = item["assets"][0]["name"]
+                                links[count]["name"] = name
                                 links[count]["land"] = {}
                                 rarity = item["assets"][0]["data"]["rarity"]
                                 links[count]["land"]["rarity"] = rarity
@@ -97,6 +103,50 @@ class API():
                 else:
                     return None
         except KeyError:
+            return None
+
+    def get_custom_listings(self, url: str) -> Optional[Dict[int, Any]]:
+        '''
+        Get AtomicHub marketplace listings using the specified url
+
+        Parameters:
+        -------
+            building (str): name of the building
+
+        Returns:
+        -------
+            None or json object containing data from request response
+        '''
+
+        listings = None
+        if "wax.api.atomicassets.io" not in url:
+            raise ValueError
+        r = requests.get(url)
+        if r.status_code != 200:
+            raise RequestException
+        listings = r.json()['data']
+        if not listings:
+            return None
+        links: Dict[int, Any] = {}
+        try:
+            for count, item in enumerate(listings):
+                links.setdefault(count, {})
+                links[count]["link"] = \
+                    f"https://wax.atomichub.io/market/sale/{item['sale_id']}"
+                links[count]["price"] = int(
+                    round(int(item["price"]["amount"]) / wax_precision, 0))
+                symbol = item["price"]["token_symbol"]
+                links[count]["token_symbol"] = symbol
+                if len(item["assets"]) > 1:
+                    links[count]["land"] = item["assets"]
+                    links[count]["name"] = "Bundle"
+                else:
+                    name = item["assets"][0]["name"]
+                    links[count]["name"] = name
+                    links[count]["land"] = item["assets"][0]
+            return links
+        except KeyError as e:
+            print(e)
             return None
 
     def get_buildings(self) -> Optional[List[Dict[str, Any]]]:
@@ -154,7 +204,8 @@ class API():
     def get_wax_usd(self) -> float:
         r = requests.get(
             self.wax_usd,
-            headers={"X-CMC_PRO_API_KEY": self.CMC_KEY}).json()
+            headers={"X-CMC_PRO_API_KEY": self.CMC_KEY},
+            params={"id": "2300"}).json()
         return r["data"]["2300"]["quote"]["USD"]["price"]
 
     def get_wax_dusk(self) -> float:
