@@ -97,19 +97,25 @@ class Upgrade(commands.Cog):
         building_lv = building_prep + "_" + rarity[0]
 
         found = False
-        bprice = "N/A"
-        sprice = "N/A"
+        bprice = 0
+        sprice = 0
         for market_item in market_data:
-            if market_item["id"] == building_lv + "1":
-                bprice = market_item["attributes"]["lastSoldPrice"]
-                if found:
-                    break
-                found = True
-            if market_item["id"] == "shard_" + building_lv:
-                sprice = market_item["attributes"]["lastSoldPrice"]
-                if found:
-                    break
-                found = True
+            try:
+                if market_item["id"] == building_lv + "1":
+                    bprice = market_item["attributes"]["lastSoldPrice"]
+                    if found:
+                        break
+                    found = True
+            except KeyError:
+                pass
+            try:
+                if market_item["id"] == "shard_" + building_lv:
+                    sprice = market_item["attributes"]["lastSoldPrice"]
+                    if found:
+                        break
+                    found = True
+            except KeyError:
+                pass
         currlvl = start+1  # if start != 0 else 2
         result: Dict[str, Any] = {}
         while currlvl <= int(end):
@@ -132,8 +138,9 @@ class Upgrade(commands.Cog):
             currlvl += 1
         description = f"Requirements to upgrade **{generation} {rarity}** " + \
                       f"**{building}** from **{start}** to **{end}**\n" + \
-                      f"Current prices: Building {bprice} Dusk,  " + \
-                      f"Shard {sprice} Dusk"
+                      f"Current prices: Building " + \
+                      f"{bprice if bprice != 0 else 'N/A'} Dusk,  " + \
+                      f"Shard {sprice if sprice != 0 else 'N/A'} Dusk"
         em_msg = discord.Embed(
             title=f"Upgrade (include building price: {include_building})",
             description=description,
@@ -142,9 +149,10 @@ class Upgrade(commands.Cog):
             em_msg.add_field(
                 name="Dusk" if item == "upgradePrice" else "Shards",
                 value=str(result[item]))
-        total = sum([result.get("upgradePrice", 0),
-                     result.get("shardsRequired", 0)*sprice])
-        if not (bprice == "N/A") and include_building:
+        total = result.get("upgradePrice", 0)
+        if sprice != 0:
+            total = total + result.get("shardsRequired", 0)*sprice
+        if (bprice != 0) and include_building:
             total += bprice
         em_msg.add_field(
             name="Total Dusk",
@@ -157,7 +165,7 @@ class Upgrade(commands.Cog):
         )
         em_msg.add_field(
             name="Total USD",
-            value=str(round(total_wax*self.bot.api.get_wax_usd(), 2))
+            value="$" + str(round(total_wax*self.bot.api.get_wax_usd(), 2))
         )
         await interaction.followup.send(embed=em_msg)
 
