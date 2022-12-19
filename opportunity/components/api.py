@@ -1,5 +1,4 @@
 import requests
-import pyourls3
 import datetime as dt
 
 # Annotation imports
@@ -33,9 +32,6 @@ class API():
             self.config = bot.config
             url = self.config["yourls"]["url"]
             secret = self.config["yourls"]["secret"]
-        self.yourls: pyourls3.Yourls = pyourls3.Yourls(
-            addr=url,
-            key=secret)
         self.wax_dusk = "https://wax.alcor.exchange/api/markets/262"
         self.CMC_KEY = "5234f810-95e0-4977-94dc-25478c62b302"
         self.wax_usd = "https://pro-api.coinmarketcap.com/v2/" + \
