@@ -42,7 +42,10 @@ def main(args):
                         if recipe not in categories[j[recipe]["category"]]:
                             categories.setdefault(j[recipe]["category"], {})
                             category = j[recipe]["category"]
-                            categories[category][recipe] = j[recipe]
+                            r = {k: v for k, v in j[recipe].items() if k in
+                                 ["id", "name", "durationSeconds",
+                                  "requirements", "inputs"]}
+                            categories[category][recipe] = r
                     if "Lv" in s[len(s)-1] or \
                             "prepare" in s[0] or \
                             "host" in s[0] or \
@@ -51,7 +54,11 @@ def main(args):
                         if recipe not in categories[j[recipe]["category"]]:
                             category = j[recipe]["category"]
                             categories.setdefault(j[recipe]["category"], {})
-                            categories[category][recipe] = j[recipe]
+                            a = j[recipe]
+                            r = {k: v for k, v in j[recipe].items() if k in
+                                 ["id", "name", "durationSeconds",
+                                  "requirements", "inputs"]}
+                            categories[category][recipe] = r
                 except Exception as e:
                     logger.error(e)
             else:
