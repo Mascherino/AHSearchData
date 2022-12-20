@@ -10,6 +10,8 @@ import datetime as dt
 import logging
 import configparser
 
+from pymysql.err import OperationalError
+
 # Annotation imports
 from typing import (
     TYPE_CHECKING,
@@ -332,6 +334,15 @@ async def reminder(
                         "task_name": bot.data["recipes"][recipe]["name"]})
             except ConflictingIdError as e:
                 bot.logger.error("Conflicting id in job")
+            except OperationalError as e2:
+                bot.logger.error(e2)
+                await interaction.followup.send(embed=discord.Embed(
+                    title="Error",
+                    description="Could not connect to database, " +
+                                "please try again in a few seconds",
+                    color=Color.RED
+                ))
+                return
             break
         task_time = bot.data["recipes"][recipe]["durationSeconds"]
         m, s = divmod(task_time, 60)
