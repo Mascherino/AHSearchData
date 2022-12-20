@@ -17,14 +17,14 @@ if TYPE_CHECKING:
 
 class Notifications(commands.Cog):
 
-    ex_ch_id = 1038886699587076216  # explorer channel id
-    ex_r_id = 1038880989662957660  # explorer role id
+    ex_ch_id = 1038886699587076216  # Explorer channel id
+    ex_r_id = 1038880989662957660  # Explorer role id
 
-    ha_ch_id = 1038886620033712158  # hauler channel id
-    ha_r_id = 1054020653247901868  # hauler role id
+    ha_ch_id = 1054020390114045985  # Hauler channel id
+    ha_r_id = 1054020653247901868  # Hauler role id
 
-    happy_ch_id = 1054011400583925792  # test
-    happy_r_id = 1042527035467235500  # HappyHour
+    happy_ch_id = 1054011400583925792  # Happy Hour channel id
+    happy_r_id = 1042527035467235500  # Happy Hour role id
 
     triggers = {
         "hauler": CronTrigger(hour=12, minute=40, day_of_week="sun,wed"),
