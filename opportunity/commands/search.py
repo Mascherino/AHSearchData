@@ -48,7 +48,7 @@ async def advanced_ac(
         pass
     else:
         choices.append("Metis Shield")
-        choices.extend(["Habitat", "Shelter"])
+        choices.extend(["Concrete Habitat", "Shelter"])
         choices.extend(['Rover Works', 'Engineering Bay',
                         'Thorium Reactor', 'Composter'])
         choices.extend(["Mining Rig", "Polar Workshop", "GrindnBrew"])
