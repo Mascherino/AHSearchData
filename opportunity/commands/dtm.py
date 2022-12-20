@@ -73,8 +73,8 @@ class DTM(commands.Cog):
                     name=f"{listings[item]['name']}",
                     value="\n".join([
                         f"[Link]({listings[item]['link']})",
-                        f"{listings[item]['price']['amount']} " +
-                        f"{listings[item]['price']['token_symbol']}",
+                        f"{str(listings[item]['price'])} " +
+                        f"{listings[item]['token_symbol']}",
                         listings[item]["land"]["data"]["rarity"]
                         if isinstance(listings[item]["land"], dict)
                         else "Bundle"])
