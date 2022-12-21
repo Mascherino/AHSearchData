@@ -2,9 +2,9 @@ import json
 from json.decoder import JSONDecodeError
 import os
 from os.path import dirname as up
-import re
 import string
 import requests_cache
+from sqlite3 import connect
 
 import datetime as dt
 import logging
@@ -14,12 +14,9 @@ from pymysql.err import OperationalError
 
 # Annotation imports
 from typing import (
-    TYPE_CHECKING,
     Any,
     Optional,
     Dict,
-    Sequence,
-    Union,
     List
 )
 
@@ -37,7 +34,7 @@ from utils import id_generator, setup_logging, Color, translate_bldg
 
 from apscheduler.job import Job
 
-from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
+from apscheduler.jobstores.base import ConflictingIdError
 
 building_regex = r"(([a-zA-Z0-9_]+-gen[2,3]_)|(([a-zA-Z0-9]+-){0,1}" \
     r"([a-zA-Z0-9]+_){1,3})|([a-zA-Z0-9_]+-22_))[C,U,R,E,L,M,S](10|[1-9])"
@@ -79,7 +76,7 @@ class Bot(commands.Bot):
                 f"{self.vh.local_version} \x1b[0m->" +
                 f"\x1b[32m {self.vh.remote_version}")
 
-        cache = requests_cache.install_cache(
+        requests_cache.install_cache(
             "opportunity",
             backend="sqlite",
             expire_after=300)
@@ -91,7 +88,17 @@ class Bot(commands.Bot):
 
         await self.change_presence(activity=discord.Game(
                                    name="Million on Mars"))
+
         self.scheduler.start()
+        self.scheduler.add_job(
+            cleanSQLITE,
+            args=["opportunity.sqlite"],
+            trigger="interval",
+            minutes=5,
+            id="cleansqlite",
+            replace_existing=True,
+            jobstore="memory")
+
         await load_cogs(self)
         await load_commands(self)
         self.emoji = await load_emojis(self)
@@ -185,6 +192,13 @@ async def remind(user: int, channel_id: int, **kwargs):
                            color=Color.GREEN)
     if isinstance(channel, discord.TextChannel):
         await channel.send(content=f"{u.mention}", embed=em_msg)
+
+def cleanSQLITE(path: str) -> None:
+    requests_cache.remove_expired_responses()
+    conn = connect(path)
+    conn.execute("VACUUM")
+    conn.close()
+
 
 bot = Bot()
 
