@@ -188,68 +188,6 @@ async def remind(user: int, channel_id: int, **kwargs):
 
 bot = Bot()
 
-@bot.command(name="level", aliases=["levels", "lvl", "maxlevel"])
-async def level(ctx: commands.Context):
-    '''
-    List all building level
-
-    Returns:
-        Nothing, message is sent in channel
-    '''
-    try:
-        message = await ctx.send(ctx.author.mention + """\nGetting level..""")
-
-        mythic = "C-M"
-        special = "S"
-        other_lvl = "10 (C), 8 (U), 6 (R), 5 (E-M)"
-        buildings = {
-            "solar_panel": {"rarities": mythic, "max_level": "10"},
-            "cad": {"rarities": mythic, "max_level": "10"},
-            "greenhouse": {"rarities": mythic, "max_level": "10"},
-            "water_filter": {"rarities": mythic, "max_level": "10"},
-            "grindnbrew": {"rarities": mythic, "max_level": "10"},
-            "polar_workshop": {"rarities": mythic, "max_level": "10"},
-            "mining_rig": {"rarities": mythic, "max_level": "10"},
-            "smelter": {"rarities": mythic, "max_level": "10"},
-            "machine_shop": {"rarities": mythic, "max_level": "10"},
-            "sab_reactor": {"rarities": mythic, "max_level": "10"},
-            "chem_lab": {"rarities": mythic, "max_level": "10"},
-            "3d_print_shop": {"rarities": mythic, "max_level": "10"},
-            "rover_works": {"rarities": mythic, "max_level": other_lvl},
-            "cantina": {"rarities": special, "max_level": "6"},
-            "bazaar": {"rarities": special, "max_level": "5"},
-            "teashop": {"rarities": special, "max_level": "5"},
-            "pirate_radio": {"rarities": special, "max_level": "10"},
-            "library": {"rarities": special, "max_level": "10"},
-            "training_hall": {"rarities": special, "max_level": "10"},
-            "engineering_bay": {"rarities": mythic, "max_level": other_lvl},
-            "concrete_habitat": {"rarities": mythic, "max_level": "5"},
-            "shelter": {"rarities": mythic, "max_level": "5"},
-            "gallery": {"rarities": special, "max_level": "10"},
-            "metis_shield": {"rarities": mythic, "max_level": "1"},
-            "thorium_reactor": {"rarities": mythic, "max_level": other_lvl}}
-        rarities = ["C-M"]
-        em_msg = discord.Embed(title="Buildings",
-                               description="List of all buildings\n" +
-                               "Possible rarities: C, U, R, E, L, M",
-                               color=Color.GREEN)
-        em_msg.add_field(name="Buildings",
-                         value="\n".join(buildings.keys()), inline=True)
-        em_msg.add_field(name="Rarities",
-                         value="\n".join([
-                             buildings[x]["rarities"] for x in buildings]),
-                         inline=True)
-        em_msg.add_field(name="Level",
-                         value="\n".join([buildings[x]["max_level"]
-                                         for x in buildings]),
-                         inline=True)
-        await message.delete()
-        message = await ctx.send(ctx.author.mention, embed=em_msg)
-    except Exception as e:
-        print(e)
-        await ctx.send(f"Error listing all level.\n {e}")
-
-
 @bot.command(name="test")
 async def test(ctx: commands.Context):
     bot.scheduler.add_job(
@@ -358,14 +296,6 @@ async def reminder(
         await interaction.followup.send(embed=em_msg)
     except Exception as e:
         bot.logger.error(e)
-
-# @bot.command(name="tasks", aliases=["recipes"])
-# async def tasks(ctx: commands.Context) -> None:
-#     msg = f"A complete list of all recipes is available at " + \
-#         config["misc"]["recipes_url"]
-#     em_msg = discord.Embed(color=Color.DARK_GRAY)
-#     em_msg.add_field(name="Recipes", value=msg)
-#     await ctx.send(embed=em_msg)
 
 bot.tree.add_command(reminder)
 bot.run(config["discord"]["TOKEN"])
