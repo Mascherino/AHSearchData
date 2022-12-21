@@ -94,7 +94,7 @@ class Bot(commands.Bot):
             cleanSQLITE,
             args=["opportunity.sqlite"],
             trigger="interval",
-            minutes=5,
+            minutes=int(self.config["scheduler"]["cleansqlite"]),
             id="cleansqlite",
             replace_existing=True,
             jobstore="memory")
