@@ -15,8 +15,11 @@ class Scheduler(AsyncIOScheduler):
 
     def __init__(self, mysql_creds: str) -> None:
         url = f"mariadb+pymysql://{mysql_creds}/flask?charset=utf8mb4"
-        self.js = {'default': SQLAlchemyJobStore(url=url),
-                   'memory': MemoryJobStore()}
+        self.js = {
+            'default': SQLAlchemyJobStore(
+                url=url,
+                engine_options={"pool_pre_ping": True, "pool_recycle": 300}),
+            'memory': MemoryJobStore()}
         super().__init__(
             jobstores=self.js,
             timezone=str(tzlocal.get_localzone()))
