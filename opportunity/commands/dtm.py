@@ -11,7 +11,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import Color
+from utils import Color, get_dtm_listings
 
 if TYPE_CHECKING:
     from opportunity.opportunity import Bot
@@ -36,13 +36,7 @@ class DTM(commands.Cog):
         await interaction.response.defer(thinking=True)
         if not (listings := self.bot.api.get_custom_listings(self.url)):
             return
-        for k, v in listings.copy().items():
-            if isinstance(v["land"], dict):
-                lat = v["land"]["immutable_data"]["latitude"]
-                lon = v["land"]["immutable_data"]["longitude"]
-                if not (-13.7618994 >= float(lat) >= -14.0379497 and
-                        -58.8787492 >= float(lon) >= -58.9983385):
-                    del listings[k]
+        listings = get_dtm_listings(listings)
         if not listings:
             await interaction.followup.send(embed=discord.Embed(
                 title="Plots for sale",
