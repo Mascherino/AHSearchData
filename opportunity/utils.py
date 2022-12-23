@@ -30,12 +30,23 @@ def abbr_to_full(abbr: str) -> str:
     return full[abbr]
 
 def get_dtm_listings(listings: Dict[Any, Any]) -> Dict[Any, Any]:
+    inBundle: bool = False
+
+    def checkCoords(land):
+        lat = land["immutable_data"]["latitude"]
+        lon = land["immutable_data"]["longitude"]
+        return (-13.7618994 >= float(lat) >= -14.0379497 and
+                -58.8787492 >= float(lon) >= -58.9983385)
     for k, v in listings.copy().items():
         if isinstance(v["land"], dict):
-            lat = v["land"]["immutable_data"]["latitude"]
-            lon = v["land"]["immutable_data"]["longitude"]
-            if not (-13.7618994 >= float(lat) >= -14.0379497 and
-                    -58.8787492 >= float(lon) >= -58.9983385):
+            if not checkCoords(v["land"]):
+                del listings[k]
+        elif isinstance(v["land"], list):
+            inBundle = False
+            for land in v["land"]:
+                if checkCoords(land):
+                    inBundle = True
+            if not inBundle:
                 del listings[k]
     return listings
 
