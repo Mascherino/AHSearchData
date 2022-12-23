@@ -29,6 +29,16 @@ def abbr_to_full(abbr: str) -> str:
     }
     return full[abbr]
 
+def get_dtm_listings(listings: Dict[Any, Any]) -> Dict[Any, Any]:
+    for k, v in listings.copy().items():
+        if isinstance(v["land"], dict):
+            lat = v["land"]["immutable_data"]["latitude"]
+            lon = v["land"]["immutable_data"]["longitude"]
+            if not (-13.7618994 >= float(lat) >= -14.0379497 and
+                    -58.8787492 >= float(lon) >= -58.9983385):
+                del listings[k]
+    return listings
+
 def translate_bldg(building: str):
     translate = {
         "solar_panel": "solar",
