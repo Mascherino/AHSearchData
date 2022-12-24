@@ -33,10 +33,13 @@ def get_dtm_listings(listings: Dict[Any, Any]) -> Dict[Any, Any]:
     inBundle: bool = False
 
     def checkCoords(land):
-        lat = land["immutable_data"]["latitude"]
-        lon = land["immutable_data"]["longitude"]
-        return (-13.7618994 >= float(lat) >= -14.0379497 and
-                -58.8787492 >= float(lon) >= -58.9983385)
+        try:
+            lat = land["immutable_data"]["latitude"]
+            lon = land["immutable_data"]["longitude"]
+            return (-13.7618994 >= float(lat) >= -14.0379497 and
+                    -58.8787492 >= float(lon) >= -58.9983385)
+        except KeyError:
+            return False
     for k, v in listings.copy().items():
         if isinstance(v["land"], dict):
             if not checkCoords(v["land"]):
