@@ -96,17 +96,17 @@ class Notifications(commands.Cog):
     async def happyhour_start(self) -> None:
         ending = dt.datetime.now() + dt.timedelta(hours=3)
         time = f"<t:{int(ending.timestamp())}:R>"
-        if (isinstance(self.ha_ch, discord.TextChannel) and
-                isinstance(self.ha_r, discord.Role)):
-            await self.ha_ch.send(f"{self.ha_r.mention}\n" +
-                                  f"Happy hour is now available. " +
-                                  f"Ending {time}")
+        if (isinstance(self.happy_ch, discord.TextChannel) and
+                isinstance(self.happy_r, discord.Role)):
+            await self.happy_ch.send(f"{self.happy_r.mention}\n" +
+                                     f"Happy hour is now available " +
+                                     f"for 3 hours")
 
     async def happyhour_end(self) -> None:
-        if (isinstance(self.ha_ch, discord.TextChannel) and
-                isinstance(self.ha_r, discord.Role)):
-            await self.ha_ch.send(f"{self.ha_r.mention}\n" +
-                                  "Happy Hour ends in 10 minutes.")
+        if (isinstance(self.happy_ch, discord.TextChannel) and
+                isinstance(self.happy_r, discord.Role)):
+            await self.happy_ch.send(f"{self.happy_r.mention}\n" +
+                                     "Happy Hour ends in 10 minutes.")
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Notifications(bot))
