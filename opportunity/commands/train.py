@@ -58,7 +58,7 @@ class Train(commands.Cog):
             await interaction.followup.send(embed=discord.Embed(
                 title="Error",
                 description="Currently only Aerospace can be " +
-                            "trained about level 150",
+                            "trained above level 150",
                 color=Color.RED))
             return
         self.logger.info(f"Iterating over levels {start} " +
