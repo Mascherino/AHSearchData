@@ -4,7 +4,7 @@ import os
 from os.path import dirname as up
 import string
 import requests_cache
-from sqlite3 import connect
+from sqlite3 import connect, Row
 
 import datetime as dt
 import logging
@@ -270,6 +270,12 @@ async def reminder(
     recipe: str
 ) -> None:
     await interaction.response.defer(thinking=True)
+    con = connect("recipes.sqlite")
+    con.row_factory = Row  # set query return type to dict
+    cur = con.cursor()
+    cur.execute("SELECT name, durationSeconds, inputs FROM recipes WHERE id=?",
+                (recipe,))
+    r = dict(cur.fetchone())
     try:
         job_id = id_generator(8)
         for _ in range(0, 100):
@@ -279,11 +285,11 @@ async def reminder(
                     id=job_id,
                     trigger="date",
                     next_run_time=dt.datetime.now()+dt.timedelta(
-                        seconds=bot.data["recipes"][recipe]["durationSeconds"]),
+                        seconds=r["durationSeconds"]),
                     kwargs={
                         "user": interaction.user.id,
                         "channel_id": interaction.channel_id,
-                        "task_name": bot.data["recipes"][recipe]["name"]})
+                        "task_name": r["name"]})
             except ConflictingIdError as e:
                 bot.logger.error("Conflicting id in job")
             except OperationalError as e2:
@@ -296,13 +302,13 @@ async def reminder(
                 ))
                 return
             break
-        task_time = bot.data["recipes"][recipe]["durationSeconds"]
+        task_time = r["durationSeconds"]
         m, s = divmod(task_time, 60)
         h, m = divmod(m, 60)
         task_time = '{:0>2}:{:0>2}:{:0>2}'.format(h, m, s)
         message = f"You will be reminded in **{task_time}** to " + \
                   f"finish your " + \
-                  f"**{bot.data['recipes'][recipe]['name']}** task(s)"
+                  f"**{r['name']}** task(s)"
         em_msg = discord.Embed(
             title="Reminders",
             color=Color.GREEN,
