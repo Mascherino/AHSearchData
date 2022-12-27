@@ -166,16 +166,16 @@ def setup_logging(
     file_handler = None
     if root:
         logger = logging.getLogger()
-
-        if log_path:
-            file_handler = LoggingHandler(log_path)
-            dt_fmt = '%Y-%m-%d %H:%M:%S'
-            fmt = '[{asctime}] [{levelname:<8}] {name}: {message}'
-            file_formatter = logging.Formatter(fmt, dt_fmt, style='{')
-            file_handler.setFormatter(file_formatter)
     else:
         # library, _, _ = name.partition('.')
         logger = logging.getLogger(name)
+
+    if log_path:
+        file_handler = LoggingHandler(log_path)
+        dt_fmt = '%Y-%m-%d %H:%M:%S'
+        fmt = '[{asctime}] [{levelname:<8}] {name}: {message}'
+        file_formatter = logging.Formatter(fmt, dt_fmt, style='{')
+        file_handler.setFormatter(file_formatter)
 
     handler.setFormatter(formatter)
     logger.setLevel(level)
