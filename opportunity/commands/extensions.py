@@ -21,7 +21,10 @@ if TYPE_CHECKING:
 async def check_isme(interaction: discord.Interaction) -> bool:
     return interaction.user.id == 227087936464748545
 
-class Reload_ext(commands.Cog):
+async def check_isme2(context: commands.Context) -> bool:
+    return context.author.id == 227087936464748545
+
+class Extensions(commands.Cog):
 
     def __init__(self, bot) -> None:
         self.bot: Bot = bot
@@ -74,5 +77,44 @@ class Reload_ext(commands.Cog):
             em_msg.description = str(error)
             await interaction.response.send_message(embed=em_msg)
 
+    @commands.command()
+    @commands.check(check_isme2)
+    async def disable(self, context: commands.Context, ext: str) -> None:
+        try:
+            await self.bot.unload_extension(ext)
+            self.logger.info(f"Successfully unloaded '{ext}'")
+            em_msg = discord.Embed(
+                title="Unload Extension",
+                description=f"Successfully unloaded '{ext}'",
+                color=Color.GREEN)
+            await context.send(embed=em_msg)
+        except Exception as e:
+            self.logger.error(e)
+            em_msg = discord.Embed(
+                title="Unload Extension",
+                description=f"Error reloading '{ext}'\n{e}",
+                color=Color.RED)
+            await context.send(embed=em_msg)
+
+    @commands.command()
+    @commands.check(check_isme2)
+    async def enable(self, context: commands.Context, ext: str) -> None:
+        try:
+            await self.bot.load_extension(ext)
+            self.logger.info(f"Successfully loaded '{ext}'")
+            em_msg = discord.Embed(
+                title="Load Extension",
+                description=f"Successfully loaded '{ext}'",
+                color=Color.GREEN
+            )
+            await context.send(embed=em_msg)
+        except Exception as e:
+            self.logger.error(e)
+            em_msg = discord.Embed(
+                title="Load Extension",
+                description=f"Error loading '{ext}'\n{e}",
+                color=Color.RED)
+            await context.send(embed=em_msg)
+
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(Reload_ext(bot))
+    await bot.add_cog(Extensions(bot))
