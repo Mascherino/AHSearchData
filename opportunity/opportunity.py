@@ -26,7 +26,6 @@ from discord.ext import commands
 from discord import app_commands
 
 # Custom modules
-from components.views import Listings
 from components.api import API
 from components.scheduler import Scheduler
 from components.versionhandler import VersionHandler
@@ -244,7 +243,11 @@ async def recipe_ac(
     building = translate_bldg(building)
     if not category:
         category = building + "_C" + str(level)
-    recipes = bot.data["prepared"][category]
+    con = connect("opportunity.sqlite")
+    con.row_factory = Row
+    cur = con.cursor()
+    cur.execute("SELECT * FROM prep WHERE category=?", (category,))
+    recipes = json.loads(dict(cur.fetchone())["recipes"])
     choices = recipes
     r: Optional[str] = interaction.namespace.recipe
     if len(recipes) > 25:
@@ -270,7 +273,7 @@ async def reminder(
     recipe: str
 ) -> None:
     await interaction.response.defer(thinking=True)
-    con = connect("recipes.sqlite")
+    con = connect("opportunity.sqlite")
     con.row_factory = Row  # set query return type to dict
     cur = con.cursor()
     cur.execute("SELECT name, durationSeconds, inputs FROM recipes WHERE id=?",
