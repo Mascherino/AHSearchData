@@ -1,4 +1,6 @@
 import logging
+from sqlite3 import connect, Row
+import json
 
 # Annotation imports
 from typing import (
@@ -36,7 +38,11 @@ class Train(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot: Bot = bot
         self.logger = logging.getLogger("opportunity." + __name__)
-        self.train_data = self.bot.data["prepared"]["training_hall_1"]
+        con = connect("opportunity.sqlite")
+        con.row_factory = Row
+        cur = con.cursor()
+        cur.execute("SELECT * FROM prep WHERE category='training_hall_1'")
+        self.train_data = json.loads(dict(cur.fetchone())["recipes"])
 
     @app_commands.command()
     @app_commands.autocomplete(profession=profession_ac)
