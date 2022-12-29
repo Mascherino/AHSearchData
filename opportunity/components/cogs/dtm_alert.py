@@ -1,4 +1,5 @@
 import logging
+import sqlite3
 
 import discord
 from discord.ext import commands
@@ -37,31 +38,63 @@ class DTMAlert(commands.Cog):
             replace_existing=True,
             jobstore="memory")
 
+        con = sqlite3.connect("opportunity.sqlite")
+        cur = con.cursor()
+        cur.execute("CREATE TABLE IF NOT EXISTS dtm_alert(name TEXT, " +
+                    "sale_id INT)")
+        con.commit()
+        con.close()
+
     async def alert(self) -> None:
+        con = sqlite3.connect("opportunity.sqlite")
+        con.row_factory = sqlite3.Row
+        cur = con.cursor()
+        cur.execute("SELECT * FROM dtm_alert")
+        alreadyNotified = list(map(dict, cur.fetchall()))
+
         if not (listings := self.bot.api.get_custom_listings(self.url)):
             return
         listings = get_dtm_listings(listings)
         if not listings:
             return
         threshold = int(self.bot.config["dtmalert"]["threshold"])
+        toBeNotified = []
         for listing in listings:
+            notified = False
             if int(listings[listing]["price"]) <= threshold:
-                lis = listings[listing]
-                em_msg = discord.Embed(
-                    title="DTM ALERT",
-                    color=Color.GREEN)
+                self.logger.debug("Found listing below or equal to threshold")
+                for alrNotItem in alreadyNotified:
+                    if alrNotItem["name"] == listings[listing]["name"]:
+                        notified = True
+                        break
+                if notified:
+                    self.logger.debug("Listing already notified, skipping")
+                    continue
+                toBeNotified.append(listings[listing])
+                cur.execute("""INSERT INTO dtm_alert VALUES(?, ?)""",
+                            (listings[listing]["name"],
+                             listings[listing]["link"].rsplit("/", 1)[1]))
+        if toBeNotified:
+            em_msg = discord.Embed(
+                title="DTM ALERT",
+                color=Color.GREEN)
+            self.logger.debug(f"Listings to be notified {str(toBeNotified)}")
+            for lis in toBeNotified:
                 em_msg.add_field(
                     name=lis["name"],
                     value="\n".join([
                         f"[Link]({lis['link']})",
                         f"{str(lis['price'])} {lis['token_symbol']}"]))
-                self.logger.info("Found listing below or equal to threshold")
-                if not (ch_id := self.bot.config["dtmalert"]["channel_id"]):
-                    self.logger.error("No channel_id in config file")
-                if isinstance(channel := self.bot.get_channel(int(ch_id)),
-                              discord.TextChannel):
-                    await channel.send(embed=em_msg)
-                return
+            if not (ch_id := self.bot.config["dtmalert"]["channel_id"]):
+                self.logger.error("No channel_id in config file")
+            if isinstance(channel := self.bot.get_channel(int(ch_id)),
+                          discord.TextChannel):
+                await channel.send(embed=em_msg)
+        else:
+            self.logger.info("No new listings to notify")
+        con.commit()
+        con.close()
+        return
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(DTMAlert(bot))
