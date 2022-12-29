@@ -50,7 +50,7 @@ class DTMAlert(commands.Cog):
         con.row_factory = sqlite3.Row
         cur = con.cursor()
         cur.execute("SELECT * FROM dtm_alert")
-        alreadyNotified = list(map(dict, cur.fetchall()))
+        alreadyNotified = cur.fetchall()
 
         if not (listings := self.bot.api.get_custom_listings(self.url)):
             return
@@ -64,7 +64,7 @@ class DTMAlert(commands.Cog):
             if int(listings[listing]["price"]) <= threshold:
                 self.logger.debug("Found listing below or equal to threshold")
                 for alrNotItem in alreadyNotified:
-                    if alrNotItem["name"] == listings[listing]["name"]:
+                    if dict(alrNotItem)["name"] == listings[listing]["name"]:
                         notified = True
                         break
                 if notified:
