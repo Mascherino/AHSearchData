@@ -1,0 +1,8 @@
+requests
+requests-cache
+discord.py
+pymysql
+psutil
+apscheduler
+sqlalchemy
+gitpython
