@@ -22,7 +22,8 @@ class Scheduler(AsyncIOScheduler):
             'memory': MemoryJobStore()}
         super().__init__(
             jobstores=self.js,
-            timezone=str(tzlocal.get_localzone()))
+            timezone=str(tzlocal.get_localzone()),
+            job_defaults={"misfire_grace_time": None})
 
     def get_user_jobs(self, user: int, string: bool = False
                       ) -> Optional[List[Job]]:
