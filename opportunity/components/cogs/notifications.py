@@ -29,10 +29,10 @@ class Notifications(commands.Cog):
     triggers = {
         "hauler": CronTrigger(hour=12, minute=40, day_of_week="sun,wed"),
         "happyhour_start": OrTrigger([
-            CronTrigger(hour=1, minute=0, day_of_week="sat,sun,mon"),
+            CronTrigger(hour=1, minute=0, day_of_week="sat,sun"),
             CronTrigger(hour=13, minute=0, day_of_week="sat,sun")]),
         "happyhour_end": OrTrigger([
-            CronTrigger(hour=3, minute=50, day_of_week="sat,sun,mon"),
+            CronTrigger(hour=3, minute=50, day_of_week="sat,sun"),
             CronTrigger(hour=15, minute=50, day_of_week="sat,sun")]),
         "explorer_start": CronTrigger(hour=1, minute=0, day_of_week="mon,thu"),
         "explorer_end": CronTrigger(hour=0, minute=50, day_of_week="tue,fri")
