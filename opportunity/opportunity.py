@@ -288,7 +288,7 @@ async def reminder(
                     id=job_id,
                     trigger="date",
                     next_run_time=dt.datetime.now()+dt.timedelta(
-                        seconds=r["durationSeconds"]),
+                        seconds=int(r["durationSeconds"])),
                     kwargs={
                         "user": interaction.user.id,
                         "channel_id": interaction.channel_id,
@@ -305,7 +305,7 @@ async def reminder(
                 ))
                 return
             break
-        task_time = r["durationSeconds"]
+        task_time = int(r["durationSeconds"])
         m, s = divmod(task_time, 60)
         h, m = divmod(m, 60)
         task_time = '{:0>2}:{:0>2}:{:0>2}'.format(h, m, s)
