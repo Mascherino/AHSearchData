@@ -18,7 +18,7 @@ from typing import (
 from utils import Color, get_dtm_listings
 
 if TYPE_CHECKING:
-    from opportunity.opportunity import Bot
+    from opportunity import Bot
 
 class DTMAlert(commands.Cog):
 
@@ -63,8 +63,11 @@ class DTMAlert(commands.Cog):
             notified = False
             if int(listings[listing]["price"]) <= threshold:
                 self.logger.debug("Found listing below or equal to threshold")
-                for alrNotItem in alreadyNotified:
-                    if dict(alrNotItem)["name"] == listings[listing]["name"]:
+                for alrNot in alreadyNotified:
+                    lis = listings[listing]
+                    link = lis["link"].rsplit("/", 1)[1]
+                    if dict(alrNot)["sale_id"] == link and \
+                            dict(alrNot)["name"] == lis["name"]:
                         notified = True
                         break
                 if notified:
