@@ -89,14 +89,14 @@ class Bot(commands.Bot):
                                    name="Million on Mars"))
 
         self.scheduler.start()
-        self.scheduler.add_job(
-            cleanSQLITE,
-            args=["opportunity.sqlite"],
-            trigger="interval",
-            minutes=int(self.config["scheduler"]["cleansqlite"]),
-            id="cleansqlite",
-            replace_existing=True,
-            jobstore="memory")
+        # self.scheduler.add_job(
+        #     cleanSQLITE,
+        #     args=["opportunity.sqlite"],
+        #     trigger="interval",
+        #     minutes=int(self.config["scheduler"]["cleansqlite"]),
+        #     id="cleansqlite",
+        #     replace_existing=True,
+        #     jobstore="memory")
 
         await load_cogs(self)
         await load_commands(self)
@@ -305,8 +305,8 @@ async def reminder(
                 ))
                 return
             break
-        task_time = int(r["durationSeconds"])
-        m, s = divmod(task_time, 60)
+        task_time = r["durationSeconds"]
+        m, s = divmod(int(task_time), 60)
         h, m = divmod(m, 60)
         task_time = '{:0>2}:{:0>2}:{:0>2}'.format(h, m, s)
         message = f"You will be reminded in **{task_time}** to " + \
