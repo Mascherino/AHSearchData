@@ -66,7 +66,7 @@ class DTMAlert(commands.Cog):
                 for alrNot in alreadyNotified:
                     lis = listings[listing]
                     link = lis["link"].rsplit("/", 1)[1]
-                    if dict(alrNot)["sale_id"] == link and \
+                    if str(dict(alrNot)["sale_id"]) == link and \
                             dict(alrNot)["name"] == lis["name"]:
                         notified = True
                         break
@@ -81,7 +81,7 @@ class DTMAlert(commands.Cog):
             em_msg = discord.Embed(
                 title="DTM ALERT",
                 color=Color.GREEN)
-            self.logger.debug(f"Listings to be notified {str(toBeNotified)}")
+            # self.logger.debug(f"Listings to be notified {str(toBeNotified)}")
             for lis in toBeNotified:
                 em_msg.add_field(
                     name=lis["name"],
