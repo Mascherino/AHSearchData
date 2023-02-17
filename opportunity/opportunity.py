@@ -41,16 +41,18 @@ building_regex = r"(([a-zA-Z0-9_]+-gen[2,3]_)|(([a-zA-Z0-9]+-){0,1}" \
 config = configparser.ConfigParser()
 root_path = up(up(__file__))
 
+env = os.environ.get
+LOG_LEVEL = env("OPP_LOG_LEVEL", logging.INFO)
+APS_LOG_LEVEL = env("OPP_APS_LOG_LEVEL", logging.INFO)
+REQ_CACHE_LOG_LEVEL = env("OPP_REQ_CACHE_LOG_LEVEL", logging.INFO)
+CACHE_TIMEOUT = env("OPP_CACHE_TIMEOUT", 300)
+GIT_LOG_LEVEL = env("OPP_GIT_LOG_LEVEL", logging.INFO)
+DISCORD_LOG_LEVEL = env("OPP_DISCORD_LOG_LEVEL", logging.INFO)
+JSON_FOLDER = env("OPP_JSON_FOLDER", "/app/data/json")
 class Bot(commands.Bot):
 
     def __init__(self):
-        env = os.environ.get
-        LOG_LEVEL = env("OPP_LOG_LEVEL", logging.INFO)
-        APS_LOG_LEVEL = env("OPP_APS_LOG_LEVEL", logging.INFO)
-        REQ_CACHE_LOG_LEVEL = env("OPP_REQ_CACHE_LOG_LEVEL", logging.INFO)
-        CACHE_TIMEOUT = env("OPP_CACHE_TIMEOUT", 300)
-        GIT_LOG_LEVEL = env("OPP_GIT_LOG_LEVEL", logging.INFO)
-        DISCORD_LOG_LEVEL = env("OPP_DISCORD_LOG_LEVEL", logging.INFO)
+
 
         intents = discord.Intents.all()
 
@@ -102,14 +104,6 @@ class Bot(commands.Bot):
                                    name="Million on Mars"))
 
         self.scheduler.start()
-        # self.scheduler.add_job(
-        #     cleanSQLITE,
-        #     args=["opportunity.sqlite"],
-        #     trigger="interval",
-        #     minutes=int(self.config["scheduler"]["cleansqlite"]),
-        #     id="cleansqlite",
-        #     replace_existing=True,
-        #     jobstore="memory")
 
         await load_cogs(self)
         await load_commands(self)
@@ -148,10 +142,9 @@ async def load_commands(bot: Bot) -> None:
                 bot.logger.error(e)
 
 def load_data(bot: Bot) -> Dict[str, Any]:
-    json_path = os.path.join(root_path, bot.config["misc"]["json_folder"])
     data = {}
-    for file in os.listdir(json_path):
-        data[file[:-5]] = read_json(bot, os.path.join(json_path, file))
+    for file in os.listdir(JSON_FOLDER):
+        data[file[:-5]] = read_json(bot, os.path.join(JSON_FOLDER, file))
     return data
 
 async def load_emojis(bot: Bot) -> Dict[str, str]:
@@ -204,12 +197,6 @@ async def remind(user: int, channel_id: int, **kwargs):
                            color=Color.GREEN)
     if isinstance(channel, discord.TextChannel):
         await channel.send(content=f"{u.mention}", embed=em_msg)
-
-def cleanSQLITE(path: str) -> None:
-    requests_cache.remove_expired_responses()
-    conn = connect(path)
-    conn.execute("VACUUM")
-    conn.close()
 
 
 bot = Bot()
