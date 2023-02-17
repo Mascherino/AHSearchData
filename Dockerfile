@@ -3,8 +3,9 @@
 FROM node:latest as node_base
 FROM python:latest
 
-VOLUME ["/app/data"]
+VOLUME ["/app/data", "/app/data/json"]
 
+WORKDIR /app/
 COPY --from=node_base / /
 RUN npm install lzutf8
 
