@@ -18,7 +18,7 @@ from typing import (
 from utils import Color, get_dtm_listings
 
 if TYPE_CHECKING:
-    from opportunity import Bot
+    from opportunity.opportunity import Bot
 
 class DTMAlert(commands.Cog):
 
@@ -38,7 +38,8 @@ class DTMAlert(commands.Cog):
             replace_existing=True,
             jobstore="memory")
 
-        con = sqlite3.connect("opportunity.sqlite")
+        self.database = self.bot.config["dtmalert"]["database"]
+        con = sqlite3.connect(self.database)
         cur = con.cursor()
         cur.execute("CREATE TABLE IF NOT EXISTS dtm_alert(name TEXT, " +
                     "sale_id INT)")
@@ -46,7 +47,7 @@ class DTMAlert(commands.Cog):
         con.close()
 
     async def alert(self) -> None:
-        con = sqlite3.connect("opportunity.sqlite")
+        con = sqlite3.connect(self.database)
         con.row_factory = sqlite3.Row
         cur = con.cursor()
         cur.execute("SELECT * FROM dtm_alert")
@@ -81,7 +82,6 @@ class DTMAlert(commands.Cog):
             em_msg = discord.Embed(
                 title="DTM ALERT",
                 color=Color.GREEN)
-            # self.logger.debug(f"Listings to be notified {str(toBeNotified)}")
             for lis in toBeNotified:
                 em_msg.add_field(
                     name=lis["name"],
