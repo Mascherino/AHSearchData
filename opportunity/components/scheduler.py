@@ -13,8 +13,8 @@ from typing import (
 
 class Scheduler(AsyncIOScheduler):
 
-    def __init__(self, mysql_creds: str) -> None:
-        url = f"mariadb+pymysql://{mysql_creds}/flask?charset=utf8mb4"
+    def __init__(self, mysql_creds: str, database: str) -> None:
+        url = f"mariadb+pymysql://{mysql_creds}/{database}?charset=utf8mb4"
         self.js = {
             'default': SQLAlchemyJobStore(
                 url=url,
