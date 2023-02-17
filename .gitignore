@@ -1,7 +1,8 @@
 __pycache__/
-*.log
-config.cfg
-*.log.*
-data/*
+.mypy_cache
 .vscode/
+data/*
+*.log
+*.log.*
+config.cfg
 *.sqlite
