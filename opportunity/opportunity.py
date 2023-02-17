@@ -40,12 +40,18 @@ building_regex = r"(([a-zA-Z0-9_]+-gen[2,3]_)|(([a-zA-Z0-9]+-){0,1}" \
 
 config = configparser.ConfigParser()
 root_path = up(up(__file__))
-config_path = os.path.join(root_path, "config.cfg")
-config.read(config_path)
 
 class Bot(commands.Bot):
 
     def __init__(self):
+        env = os.environ.get
+        LOG_LEVEL = env("OPP_LOG_LEVEL", logging.INFO)
+        APS_LOG_LEVEL = env("OPP_APS_LOG_LEVEL", logging.INFO)
+        REQ_CACHE_LOG_LEVEL = env("OPP_REQ_CACHE_LOG_LEVEL", logging.INFO)
+        CACHE_TIMEOUT = env("OPP_CACHE_TIMEOUT", 300)
+        GIT_LOG_LEVEL = env("OPP_GIT_LOG_LEVEL", logging.INFO)
+        DISCORD_LOG_LEVEL = env("OPP_DISCORD_LOG_LEVEL", logging.INFO)
+
         intents = discord.Intents.all()
 
         super().__init__(command_prefix=commands.when_mentioned_or('!'),
@@ -53,9 +59,16 @@ class Bot(commands.Bot):
 
         self.logger = logging.getLogger("opportunity.bot")
         log_path = os.path.join(root_path, "logs", "opportunity.log")
-        setup_logging("opportunity", root=True, log_path=log_path)
+        setup_logging(
+            "opportunity",
+            level=LOG_LEVEL,
+            root=True,
+            log_path=log_path)
         logging.getLogger("discord").propagate = False
-        logging.getLogger("apscheduler").setLevel(logging.DEBUG)
+        logging.getLogger("discord").setLevel(DISCORD_LOG_LEVEL)
+        logging.getLogger("apscheduler").setLevel(APS_LOG_LEVEL)
+        logging.getLogger("requests_cache").setLevel(REQ_CACHE_LOG_LEVEL)
+        logging.getLogger("git").setLevel(GIT_LOG_LEVEL)
 
         self.config = config
 
@@ -78,7 +91,7 @@ class Bot(commands.Bot):
         requests_cache.install_cache(
             "opportunity",
             backend="sqlite",
-            expire_after=300)
+            expire_after=int(CACHE_TIMEOUT))
 
     async def on_ready(self):
 
@@ -320,5 +333,16 @@ async def reminder(
     except Exception as e:
         bot.logger.error(e)
 
+# copy default config to mounted docker volume
+if not os.path.isfile("/app/data/config.cfg"):
+    bot.logger.info("No config file found, creating default config")
+    os.system("cp /root/Opportunity/default_config.cfg /app/data/config.cfg")
+
+config_path = "/app/data/config.cfg"
+config.read(config_path)
 bot.tree.add_command(reminder)
+
+if not config.has_option("discord", "TOKEN"):
+    bot.logger.fatal("No discord bot token found")
+    raise RuntimeError("No discord bot token found")
 bot.run(config["discord"]["TOKEN"])
