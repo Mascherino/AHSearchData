@@ -16,6 +16,7 @@ from typing import (
     Tuple,
     Dict,
     Any,
+    Union
 )
 
 def abbr_to_full(abbr: str) -> str:
@@ -144,13 +145,13 @@ def setup_logging(
     name: str,
     handler: Optional[logging.Handler] = None,
     formatter: Optional[logging.Formatter] = None,
-    level: int = -1,
+    level: Union[int, str] = "",
     root: Optional[bool] = None,
     log_path: Optional[str] = None
 ) -> None:
 
-    if level == -1:
-        level = logging.DEBUG
+    if not level:
+        level = "DEBUG"
 
     if handler is None:
         handler = logging.StreamHandler()
