@@ -39,6 +39,14 @@ building_regex = r"(([a-zA-Z0-9_]+-gen[2,3]_)|(([a-zA-Z0-9]+-){0,1}" \
     r"([a-zA-Z0-9]+_){1,3})|([a-zA-Z0-9_]+-22_))[C,U,R,E,L,M,S](10|[1-9])"
 
 config = configparser.ConfigParser()
+
+# copy default config to mounted docker volume
+if not os.path.isfile("/app/data/config.cfg"):
+    os.system("cp /root/Opportunity/default_config.cfg /app/data/config.cfg")
+
+config_path = "/app/data/config.cfg"
+config.read(config_path)
+
 root_path = up(up(__file__))
 
 env = os.environ.get
@@ -49,6 +57,7 @@ CACHE_TIMEOUT = env("OPP_CACHE_TIMEOUT", 300)
 GIT_LOG_LEVEL = env("OPP_GIT_LOG_LEVEL", logging.INFO)
 DISCORD_LOG_LEVEL = env("OPP_DISCORD_LOG_LEVEL", logging.INFO)
 JSON_FOLDER = env("OPP_JSON_FOLDER", "/app/data/json")
+
 class Bot(commands.Bot):
 
     def __init__(self):
@@ -77,7 +86,8 @@ class Bot(commands.Bot):
         self.data = load_data(self)
 
         self.scheduler: Scheduler = Scheduler(
-            self.config['mariadb']['credentials'])
+            self.config['mariadb']['credentials'],
+            self.config['mariadb']['database'])
 
         self.api: API = API(self)
         self.data["clean_bldg"] = self.api.get_building_names_clean()
@@ -320,15 +330,7 @@ async def reminder(
     except Exception as e:
         bot.logger.error(e)
 
-# copy default config to mounted docker volume
-if not os.path.isfile("/app/data/config.cfg"):
-    bot.logger.info("No config file found, creating default config")
-    os.system("cp /root/Opportunity/default_config.cfg /app/data/config.cfg")
-
-config_path = "/app/data/config.cfg"
-config.read(config_path)
 bot.tree.add_command(reminder)
-
 if not config.has_option("discord", "TOKEN"):
     bot.logger.fatal("No discord bot token found")
     raise RuntimeError("No discord bot token found")
