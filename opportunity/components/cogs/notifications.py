@@ -18,13 +18,17 @@ if TYPE_CHECKING:
 class Notifications(commands.Cog):
 
     ex_ch_id = 1038886699587076216  # Explorer channel id
-    ex_r_id = 1038880989662957660  # Explorer role id
+    ex2_r_id = 1038880989662957660  # 2x Explorer role id
+    ex_r_id = 1065156457244405821  # 1x Explorer role id
 
     ha_ch_id = 1054020390114045985  # Hauler channel id
     ha_r_id = 1054020653247901868  # Hauler role id
 
     happy_ch_id = 1054011400583925792  # Happy Hour channel id
     happy_r_id = 1042527035467235500  # Happy Hour role id
+
+    rp_ch_id = 00000  # Research paper channel id
+    rp_r_id = 1074766817148555285  # Research paper role id
 
     triggers = {
         "hauler": CronTrigger(hour=12, minute=40, day_of_week="sun,wed"),
@@ -34,8 +38,11 @@ class Notifications(commands.Cog):
         "happyhour_end": OrTrigger([
             CronTrigger(hour=3, minute=50, day_of_week="sat,sun"),
             CronTrigger(hour=15, minute=50, day_of_week="sat,sun")]),
+        "explorer_24h_before": CronTrigger(hour=1,
+                                           minute=0,
+                                           day_of_week="sun,wed"),
         "explorer_start": CronTrigger(hour=1, minute=0, day_of_week="mon,thu"),
-        "explorer_end": CronTrigger(hour=0, minute=50, day_of_week="tue,fri")
+        "explorer_end": CronTrigger(hour=0, minute=50, day_of_week="tue,fri"),
     }
 
     def __init__(self, bot) -> None:
@@ -57,6 +64,7 @@ class Notifications(commands.Cog):
                       discord.abc.GuildChannel):
             self.ex_ch = ex_ch
             self.ex_r = discord.utils.get(ex_ch.guild.roles, id=self.ex_r_id)
+            self.ex2_r = discord.utils.get(ex_ch.guild.roles, id=self.ex2_r_id)
 
         if isinstance(ha_ch := self.bot.get_channel(self.ha_ch_id),
                       discord.abc.GuildChannel):
@@ -69,21 +77,31 @@ class Notifications(commands.Cog):
             self.happy_r = discord.utils.get(hh_ch.guild.roles,
                                              id=self.happy_r_id)
 
+    async def explorer_24h_before(self) -> None:
+        if (isinstance(self.ex_ch, discord.TextChannel) and
+                isinstance(self.ex2_r, discord.Role)):
+            await self.ex_ch.send(f"{self.ex2_r.mention}\n" +
+                                  f"Explorer Missions will be" +
+                                  f"available in 24 hours. " +
+                                  f"Make sure to plan accordingly.")
+
     async def explorer_start(self) -> None:
         ending = dt.datetime.now() + dt.timedelta(days=1)
         time = f"<t:{int(ending.timestamp())}:R>"
         if (isinstance(self.ex_ch, discord.TextChannel) and
-                isinstance(self.ex_r, discord.Role)):
-            await self.ex_ch.send(f"{self.ex_r.mention}\n" +
-                                  f"Explorer Missions are now " +
+                isinstance(self.ex_r, discord.Role) and
+                isinstance(self.ex2_r, discord.Role)):
+            await self.ex_ch.send(f"{self.ex_r.mention} {self.ex2_r.mention}" +
+                                  f"\nExplorer Missions are now " +
                                   f"available for 24 hours. " +
                                   f"Ending {time}")
 
     async def explorer_end(self) -> None:
         if (isinstance(self.ex_ch, discord.TextChannel) and
-                isinstance(self.ex_r, discord.Role)):
-            await self.ex_ch.send(f"{self.ex_r.mention}\n" +
-                                  "Explorer Missions are only " +
+                isinstance(self.ex_r, discord.Role) and
+                isinstance(self.ex2_r, discord.Role)):
+            await self.ex_ch.send(f"{self.ex_r.mention} {self.ex2_r.mention}" +
+                                  "\nExplorer Missions are only " +
                                   "available for another 10 minutes.")
 
     async def hauler(self) -> None:
