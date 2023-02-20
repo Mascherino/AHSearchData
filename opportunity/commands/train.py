@@ -38,7 +38,7 @@ class Train(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot: Bot = bot
         self.logger = logging.getLogger("opportunity." + __name__)
-        con = connect("opportunity.sqlite")
+        con = connect("/app/data/db/opportunity.sqlite")
         con.row_factory = Row
         cur = con.cursor()
         cur.execute("SELECT * FROM prep WHERE category='training_hall_1'")
